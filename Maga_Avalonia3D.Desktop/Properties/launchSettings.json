@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Maga_Avalonia3D.Desktop": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}
