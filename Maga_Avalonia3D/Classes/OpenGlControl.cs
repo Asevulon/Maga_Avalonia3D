@@ -294,6 +294,7 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
+        GlCheckError(gl, "Before Create vertex shader");
         _vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
         GlCheckError(gl, "Create vertex shader");
         var res = gl.CompileShaderAndGetError(_vertexShader, VertexShaderSource);
