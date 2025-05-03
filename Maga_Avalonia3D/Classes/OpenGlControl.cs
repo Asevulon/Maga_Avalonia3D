@@ -294,23 +294,24 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
-        _shaderProgram = gl.CreateProgram();
         
         _vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
         GlCheckError(gl, "Create vertex shader");
         var res = gl.CompileShaderAndGetError(_vertexShader, VertexShaderSource);
         if (res != null) throw new Exception("Vertex shader compile error: " + res);
         GlCheckError(gl, "Compile vertex shader");
-        gl.AttachShader(_shaderProgram, _vertexShader);
 
         _fragmentShader = gl.CreateShader(GL_FRAGMENT_SHADER);
         GlCheckError(gl, "Create fragment shader");
         res = gl.CompileShaderAndGetError(_fragmentShader, FragmentShaderSource);
         if (res != null) throw new Exception("Fragment shader compile error: " + res);
         GlCheckError(gl, "Compile fragment shader");
+
+        _shaderProgram = gl.CreateProgram();
+        gl.AttachShader(_shaderProgram, _vertexShader);
+        GlCheckError(gl, "Attach vertex shader");
         gl.AttachShader(_shaderProgram, _fragmentShader);
         GlCheckError(gl, "Attach fragment shader");
-
         gl.LinkProgram(_shaderProgram);
 
         _model = gl.GetUniformLocationString(_shaderProgram, "model");
@@ -328,7 +329,6 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
             var translation  = TranslateGlError(error);
             var line = string.Format("GL task \"" + what + $"\" failed with error {error} \"{translation}\" at line {lineNumber} called by {caller}\n");
             Console.WriteLine(line);
-            System.Diagnostics.Debugger.Break();
             throw new Exception(line);
         }
     }
