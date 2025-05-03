@@ -314,7 +314,12 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
     void GlCheckError(GlInterface gl, string what = "no info")
     {
         int error = gl.GetError();
-        if (error != GL_NO_ERROR) throw new Exception("GL task failed: " + what + $", ErrorCode {error}");
+        if (error != GL_NO_ERROR)
+        {
+            var line = string.Format("GL task failed: " + what + $", ErrorCode {error}\n");
+            Console.WriteLine(line);
+            throw new Exception(line);
+        }
     }
 
     string GlVersionSource
