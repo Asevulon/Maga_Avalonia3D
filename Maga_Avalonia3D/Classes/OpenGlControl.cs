@@ -56,7 +56,7 @@ internal unsafe class GlColor
     public float AN { get => a * normalizeValue; }
 }
 
-internal static class GlConsts
+internal static class MyGlConsts
 {
     public const int GL_UNSIGNED_INT = 0x1405;
     public const int GL_CONTEXT_PROFILE_MASK = 0x9126;
@@ -199,7 +199,7 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         }
 
         gl.BindVertexArray(_vao);
-        gl.DrawElements(GL_TRIANGLES, 36, GlConsts.GL_UNSIGNED_INT, 0);
+        gl.DrawElements(GL_TRIANGLES, 36, MyGlConsts.GL_UNSIGNED_INT, 0);
 
         GlCheckError(gl, "OnOpenGlRender");
     }
@@ -325,7 +325,7 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         if (error != GL_NO_ERROR)
         {
             var translation  = TranslateGlError(error);
-            var line = string.Format("GL task \"" + what + $"\" failed with error {error}: {translation} at line {lineNumber} called by {caller}\n");
+            var line = string.Format("GL task \"" + what + $"\" failed with error {error} \"{translation}\" at line {lineNumber} called by {caller}\n");
             Console.WriteLine(line);
             System.Diagnostics.Debugger.Break();
             throw new Exception(line);
@@ -337,28 +337,28 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         switch(code)
         {
             case GL_NO_ERROR:
-                line = "GL_NO_ERROR\n";
+                line = "GL_NO_ERROR";
                 break;
             case GL_INVALID_ENUM:
-                line = "GL_INVALID_ENUM\n";
+                line = "GL_INVALID_ENUM";
                 break;
             case GL_INVALID_VALUE:
-                line = "GL_INVALID_VALUE\n";
+                line = "GL_INVALID_VALUE";
                 break;
             case GL_INVALID_OPERATION:
-                line = "GL_INVALID_OPERATION\n";
+                line = "GL_INVALID_OPERATION";
                 break;
             case GL_STACK_OVERFLOW:
-                line = "GL_STACK_OVERFLOW\n";
+                line = "GL_STACK_OVERFLOW";
                 break;
             case GL_STACK_UNDERFLOW:
-                line = "GL_STACK_UNDERFLOW\n";
+                line = "GL_STACK_UNDERFLOW";
                 break;
             case GL_OUT_OF_MEMORY:
-                line = "GL_OUT_OF_MEMORY\n";
+                line = "GL_OUT_OF_MEMORY";
                 break;
             case GL_INVALID_FRAMEBUFFER_OPERATION:
-                line = "GL_INVALID_FRAMEBUFFER_OPERATION\n";
+                line = "GL_INVALID_FRAMEBUFFER_OPERATION";
                 break;
         }
         return line;
