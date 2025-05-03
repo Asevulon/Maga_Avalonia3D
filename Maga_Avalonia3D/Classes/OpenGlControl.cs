@@ -127,6 +127,9 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
     {
         base.OnOpenGlInit(gl);
 
+        while (gl.GetError() != GL_NO_ERROR) { }
+        GlCheckError(gl, "Wait for context init");
+
         string versionString = gl.GetString(GL_VERSION).ToString();
         _glShaderVersion = DetermineShaderVersion(versionString, gl);
 
