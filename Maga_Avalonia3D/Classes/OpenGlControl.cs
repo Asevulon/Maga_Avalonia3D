@@ -294,7 +294,6 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
-        
         _vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
         GlCheckError(gl, "Create vertex shader");
         var res = gl.CompileShaderAndGetError(_vertexShader, VertexShaderSource);
@@ -313,11 +312,9 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         gl.AttachShader(_shaderProgram, _fragmentShader);
         GlCheckError(gl, "Attach fragment shader");
         gl.LinkProgram(_shaderProgram);
-
         _model = gl.GetUniformLocationString(_shaderProgram, "model");
         _view = gl.GetUniformLocationString(_shaderProgram, "view");
         _projection = gl.GetUniformLocationString(_shaderProgram, "projection");
-
         GlCheckError(gl, "ConfigureShaders");
     }
 
@@ -334,35 +331,18 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
     }
     private string TranslateGlError(int code)
     {
-        string line = null;
-        switch(code)
+        return code switch
         {
-            case GL_NO_ERROR:
-                line = "GL_NO_ERROR";
-                break;
-            case GL_INVALID_ENUM:
-                line = "GL_INVALID_ENUM";
-                break;
-            case GL_INVALID_VALUE:
-                line = "GL_INVALID_VALUE";
-                break;
-            case GL_INVALID_OPERATION:
-                line = "GL_INVALID_OPERATION";
-                break;
-            case GL_STACK_OVERFLOW:
-                line = "GL_STACK_OVERFLOW";
-                break;
-            case GL_STACK_UNDERFLOW:
-                line = "GL_STACK_UNDERFLOW";
-                break;
-            case GL_OUT_OF_MEMORY:
-                line = "GL_OUT_OF_MEMORY";
-                break;
-            case GL_INVALID_FRAMEBUFFER_OPERATION:
-                line = "GL_INVALID_FRAMEBUFFER_OPERATION";
-                break;
-        }
-        return line;
+            GL_NO_ERROR => "GL_NO_ERROR",
+            GL_INVALID_ENUM => "GL_INVALID_ENUM",
+            GL_INVALID_VALUE => "GL_INVALID_VALUE",
+            GL_INVALID_OPERATION => "GL_INVALID_OPERATION",
+            GL_STACK_OVERFLOW => "GL_STACK_OVERFLOW",
+            GL_STACK_UNDERFLOW => "GL_STACK_UNDERFLOW",
+            GL_OUT_OF_MEMORY => "GL_OUT_OF_MEMORY",
+            GL_INVALID_FRAMEBUFFER_OPERATION => "GL_INVALID_FRAMEBUFFER_OPERATION",
+            _ => "Unknown error"
+        };
     }
 
     string GlVersionSource
