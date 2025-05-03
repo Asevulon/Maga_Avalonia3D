@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System;
 using System.ComponentModel;
 using Avalonia.OpenGL.Egl;
+using System.Runtime.CompilerServices;
 
 namespace Maga_Avalonia3D;
 internal unsafe class GlColor
@@ -59,6 +60,13 @@ internal static class GlConsts
 {
     public const int GL_UNSIGNED_INT = 0x1405;
     public const int GL_CONTEXT_PROFILE_MASK = 0x9126;
+    public const int GL_INVALID_ENUM = 1280;
+    public const int GL_INVALID_VALUE = 1281;
+    public const int GL_INVALID_OPERATION = 1282;
+    public const int GL_STACK_OVERFLOW = 1283;
+    public const int GL_STACK_UNDERFLOW = 1284;
+    public const int GL_OUT_OF_MEMORY = 1285;
+    public const int GL_INVALID_FRAMEBUFFER_OPERATION = 1286;
 }
 internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 {
@@ -311,15 +319,49 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "ConfigureShaders");
     }
 
-    void GlCheckError(GlInterface gl, string what = "no info")
+    void GlCheckError(GlInterface gl, string what = "no info", [CallerLineNumber] int lineNumber = 0, [CallerMemberName] string caller = null)
     {
         int error = gl.GetError();
         if (error != GL_NO_ERROR)
         {
-            var line = string.Format("GL task failed: " + what + $", ErrorCode {error}\n");
+            var translation  = TranslateGlError(error);
+            var line = string.Format("GL task \"" + what + $"\" failed with error {error}: {translation} at line {lineNumber} called by {caller}\n");
             Console.WriteLine(line);
+            System.Diagnostics.Debugger.Break();
             throw new Exception(line);
         }
+    }
+    private string TranslateGlError(int code)
+    {
+        string line = null;
+        switch(code)
+        {
+            case GL_NO_ERROR:
+                line = "GL_NO_ERROR\n";
+                break;
+            case GL_INVALID_ENUM:
+                line = "GL_INVALID_ENUM\n";
+                break;
+            case GL_INVALID_VALUE:
+                line = "GL_INVALID_VALUE\n";
+                break;
+            case GL_INVALID_OPERATION:
+                line = "GL_INVALID_OPERATION\n";
+                break;
+            case GL_STACK_OVERFLOW:
+                line = "GL_STACK_OVERFLOW\n";
+                break;
+            case GL_STACK_UNDERFLOW:
+                line = "GL_STACK_UNDERFLOW\n";
+                break;
+            case GL_OUT_OF_MEMORY:
+                line = "GL_OUT_OF_MEMORY\n";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                line = "GL_INVALID_FRAMEBUFFER_OPERATION\n";
+                break;
+        }
+        return line;
     }
 
     string GlVersionSource
