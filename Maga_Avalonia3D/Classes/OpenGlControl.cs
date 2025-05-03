@@ -294,13 +294,12 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 
     void ConfigureShaders(GlInterface gl)
     {
-        GlCheckError(gl, "Before call gl version");
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
-        GlCheckError(gl, "Before Create vertex shader");
         _vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
         GlCheckError(gl, "Create vertex shader");
+
         var res = gl.CompileShaderAndGetError(_vertexShader, VertexShaderSource);
         if (res != null) throw new Exception("Vertex shader compile error: " + res);
         GlCheckError(gl, "Compile vertex shader");
@@ -312,11 +311,17 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "Compile fragment shader");
 
         _shaderProgram = gl.CreateProgram();
+        GlCheckError(gl, "Create shader program");
+
         gl.AttachShader(_shaderProgram, _vertexShader);
         GlCheckError(gl, "Attach vertex shader");
+
         gl.AttachShader(_shaderProgram, _fragmentShader);
         GlCheckError(gl, "Attach fragment shader");
+
         gl.LinkProgram(_shaderProgram);
+        GlCheckError(gl, "Link shader program");
+
         _model = gl.GetUniformLocationString(_shaderProgram, "model");
         _view = gl.GetUniformLocationString(_shaderProgram, "view");
         _projection = gl.GetUniformLocationString(_shaderProgram, "projection");
