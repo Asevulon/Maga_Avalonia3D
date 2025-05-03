@@ -291,6 +291,7 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 
     void ConfigureShaders(GlInterface gl)
     {
+        GlCheckError(gl, "Before call gl version");
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
