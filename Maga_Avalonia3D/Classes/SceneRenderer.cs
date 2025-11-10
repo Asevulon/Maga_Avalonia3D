@@ -78,10 +78,7 @@ namespace Maga_Avalonia3D.Classes
             gl.ClearColor(_clearColor.X, _clearColor.Y, _clearColor.Z, 1.0f);
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Убедимся, что глубина работает
             gl.Enable(GL_DEPTH_TEST);
-            //gl.DepthFunc(GL_LEQUAL);
-            //gl.Disable(GL_CULL_FACE); // временно отключаем отсечение
 
             gl.UseProgram(_shaderProgram);
             UpdateUniforms(gl, width, height);
@@ -136,7 +133,6 @@ namespace Maga_Avalonia3D.Classes
             var vertices = new List<float>();
             var addFace = new Action<float, float, float, float, float, float, float, float, float, float, float, float>((x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3) =>
             {
-                // Нормаль вычисляется как cross((p1-p0), (p2-p0))
                 var e1 = new Vector3(x1 - x0, y1 - y0, z1 - z0);
                 var e2 = new Vector3(x2 - x0, y2 - y0, z2 - z0);
                 var normal = Vector3.Normalize(Vector3.Cross(e1, e2));
@@ -185,7 +181,6 @@ namespace Maga_Avalonia3D.Classes
 
         private (int vao, int vertexCount) CreatePyramidGeometry(GlInterface gl)
         {
-            // Квадратная пирамида без основания (только 4 боковые грани)
             var vertices = new List<float>();
 
             var apex = new Vector3(0, 0.5f, 0);
@@ -197,14 +192,12 @@ namespace Maga_Avalonia3D.Classes
                 new Vector3(-0.5f, -0.5f, -0.5f)
             };
 
-            // Добавляем 4 треугольника (боковые грани)
             for (int i = 0; i < 4; i++)
             {
                 var v0 = apex;
                 var v1 = baseVerts[i];
                 var v2 = baseVerts[(i + 1) % 4];
 
-                // Нормаль для каждой грани
                 var e1 = v1 - v0;
                 var e2 = v2 - v0;
                 var normal = Vector3.Normalize(Vector3.Cross(e1, e2));
@@ -255,7 +248,6 @@ namespace Maga_Avalonia3D.Classes
                     float y = cosPhi;
                     float z = sinPhi * sinTheta;
 
-                    // Нормаль совпадает с позицией для сферы
                     vertices.AddRange(new[] { x, y, z, x, y, z });
                 }
             }
@@ -270,13 +262,11 @@ namespace Maga_Avalonia3D.Classes
                     uint p2 = (uint)((i + 1) * (slices + 1) + j);
                     uint p3 = (uint)((i + 1) * (slices + 1) + (j + 1));
 
-                    // Два треугольника на четырёхугольник
                     indices.AddRange(new uint[] { p0, p2, p1 });
                     indices.AddRange(new uint[] { p1, p2, p3 });
                 }
             }
 
-            // Преобразуем индексы в плоский массив вершин (no VBO indexing)
             var indexedVertices = new List<float>();
             foreach (uint idx in indices)
             {

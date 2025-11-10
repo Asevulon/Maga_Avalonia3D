@@ -17,7 +17,6 @@ namespace Maga_Avalonia3D.Classes
         protected int _projection;
         protected string _glShaderVersion = "";
 
-        // Shaders can be overridden in derived classes
         protected virtual string VertexShaderResource => "Maga_Avalonia3D.Shaders.basic.vert";
         protected virtual string FragmentShaderResource => "Maga_Avalonia3D.Shaders.basic.frag";
 
@@ -149,7 +148,6 @@ namespace Maga_Avalonia3D.Classes
             }
         }
 
-        // Temporary fields for shader compilation
         private int _vertexShader;
         private int _fragmentShader;
 
