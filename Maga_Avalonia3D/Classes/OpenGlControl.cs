@@ -127,12 +127,15 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
     {
         base.OnOpenGlInit(gl);
 
+        // Ожидание готовности OpenGL
         while (gl.GetError() != GL_NO_ERROR) { }
         GlCheckError(gl, "Wait for context init");
 
+        // Получение версии OpenGL
         string versionString = gl.GetString(GL_VERSION).ToString();
         _glShaderVersion = DetermineShaderVersion(versionString, gl);
 
+        // Конфигурация шейдеров и буферов
         ConfigureShaders(gl);
         CreateVertexBuffer(gl);
 
@@ -252,10 +255,10 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 
         int glPointBitSize = Marshal.SizeOf<GlPoint>();
         int verticesBitSize = glPointBitSize * vertices.Length;
-        
+
         _vbo = gl.GenBuffer();
         gl.BindBuffer(GL_ARRAY_BUFFER, _vbo);
-        
+
         unsafe
         {
             fixed (void* pVertices = vertices)
@@ -297,31 +300,41 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         var v = gl.GetString(GL_VERSION);
         Console.WriteLine(v);
 
+        // Создаем вершинный шейдер
         _vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
         GlCheckError(gl, "Create vertex shader");
 
+        // Компилируем вершинный шейдер
         var res = gl.CompileShaderAndGetError(_vertexShader, VertexShaderSource);
         if (res != null) throw new Exception("Vertex shader compile error: " + res);
         GlCheckError(gl, "Compile vertex shader");
 
+        // Создаем фрагментный шейдер
         _fragmentShader = gl.CreateShader(GL_FRAGMENT_SHADER);
         GlCheckError(gl, "Create fragment shader");
+        
+        // Компилируем фрагментный шейдер
         res = gl.CompileShaderAndGetError(_fragmentShader, FragmentShaderSource);
         if (res != null) throw new Exception("Fragment shader compile error: " + res);
         GlCheckError(gl, "Compile fragment shader");
 
+        // Создаем шейдерную программу
         _shaderProgram = gl.CreateProgram();
         GlCheckError(gl, "Create shader program");
 
+        // Прикрепляем к программе вершинный шейдер
         gl.AttachShader(_shaderProgram, _vertexShader);
         GlCheckError(gl, "Attach vertex shader");
 
+        // Прикрепляем к программе фрагментный шейдер
         gl.AttachShader(_shaderProgram, _fragmentShader);
         GlCheckError(gl, "Attach fragment shader");
 
+        // Используем полученную программу
         gl.LinkProgram(_shaderProgram);
         GlCheckError(gl, "Link shader program");
 
+        // Создаем матрицы преобразований
         _model = gl.GetUniformLocationString(_shaderProgram, "model");
         _view = gl.GetUniformLocationString(_shaderProgram, "view");
         _projection = gl.GetUniformLocationString(_shaderProgram, "projection");
@@ -333,7 +346,7 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         int error = gl.GetError();
         if (error != GL_NO_ERROR)
         {
-            var translation  = TranslateGlError(error);
+            var translation = TranslateGlError(error);
             var line = string.Format("GL task \"" + what + $"\" failed with error {error} \"{translation}\" at line {lineNumber} called by {caller}\n");
             Console.WriteLine(line);
             throw new Exception(line);

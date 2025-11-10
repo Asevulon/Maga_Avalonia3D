@@ -1,69 +1,34 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Media;
-using System;
-namespace Maga_Avalonia3D;
+using Maga_Avalonia3D.Classes;
+using System.Collections.Generic;
+using System.Numerics;
 
+namespace Maga_Avalonia3D;
 
 public partial class Surface : UserControl
 {
-    SurfaceOpenGl surfaceOpenGl;
-    Slider rotationSlider;
+    private SceneRenderer _sceneRenderer;
 
     public Surface()
     {
         InitializeComponent();
 
-        surfaceOpenGl = new SurfaceOpenGl();
-        surfaceOpenGl.Width = canvas.Width;
-        surfaceOpenGl.Height = canvas.Height;
-        surfaceOpenGl.Background = Colors.DimGray;
+        _sceneRenderer = new SceneRenderer();
+        _sceneRenderer.Width = canvas.Width;
+        _sceneRenderer.Height = canvas.Height;
+        _sceneRenderer.ClearColor = new Vector3(0.1f, 0.1f, 0.1f);
 
-        TextBlock textBlock = new TextBlock();
-        textBlock.Text = surfaceOpenGl.Background.ToString();
-        textBlock.Foreground = new SolidColorBrush(Colors.White);
+        // Создаём статическую сцену без анимации
+        var primitives = new List<PrimitiveInstance>
+        {
+            new() { Type = PrimitiveType.Cube,    Position = new(-2, 0, 0), Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(1, 0, 0) },
+            new() { Type = PrimitiveType.Sphere,  Position = new(0, 0, 0),  Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(0, 1, 0) },
+            new() { Type = PrimitiveType.Pyramid, Position = new(2, 0, 0),  Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(0, 0, 1) }
+        };
 
-        rotationSlider = new Slider();
-        rotationSlider.Minimum = 0;
-        rotationSlider.Maximum = 2 * Math.PI;
-        rotationSlider.Width = 250;
+        _sceneRenderer.SetScene(primitives);
 
-        this.Bind(
-           RotationProperty,
-           new Binding(nameof(SurfaceOpenGl.Rotation))
-           {
-               Source = surfaceOpenGl,
-               Mode = BindingMode.TwoWay
-           }
-       );
-
-        rotationSlider.Bind(
-            Slider.ValueProperty,
-            new Binding(nameof(Rotation))
-            {
-                Source = this,
-                Mode = BindingMode.TwoWay
-            }
-        );
-
-        canvas.Children.Add(surfaceOpenGl);
-        canvas.Children.Add(textBlock);
-        canvas.Children.Add(rotationSlider);
-    }
-
-    class SurfaceOpenGl : OpenGlControl { }
-
-    // Регистрация StyledProperty для Rotation
-    public static readonly StyledProperty<double> RotationProperty =
-        AvaloniaProperty.Register<Surface, double>(
-            nameof(Rotation),
-            defaultBindingMode: BindingMode.TwoWay // Для двусторонней привязки
-        );
-
-    public double Rotation
-    {
-        get => GetValue(RotationProperty);
-        set => SetValue(RotationProperty, value);
+        canvas.Children.Add(_sceneRenderer);
     }
 }
