@@ -10,7 +10,8 @@ namespace Maga_Avalonia3D.Classes
     {
         Cube,
         Sphere,
-        Pyramid
+        Pyramid,
+        Plane
     }
 
     public struct PrimitiveInstance
@@ -31,16 +32,30 @@ namespace Maga_Avalonia3D.Classes
         private int _width;
         private int _height;
 
-        private int _colorRLocation = -1;
-        private int _colorGLocation = -1;
-        private int _colorBLocation = -1;
-
         private Vector3 _clearColor = new(0.1f, 0.1f, 0.1f);
+        private Vector3 _lightPosition = new(3.0f, 3.0f, 3.0f);
+        private Vector3 _lightColor = new(1.0f, 1.0f, 1.0f);
+
+        private int _lightPosR = -1, _lightPosG = -1, _lightPosB = -1;
+        private int _lightColorR = -1, _lightColorG = -1, _lightColorB = -1;
+        private int _objectColorR = -1, _objectColorG = -1, _objectColorB = -1;
 
         public Vector3 ClearColor
         {
             get => _clearColor;
             set => _clearColor = value;
+        }
+
+        public Vector3 LightPosition
+        {
+            get => _lightPosition;
+            set => _lightPosition = value;
+        }
+
+        public Vector3 LightColor
+        {
+            get => _lightColor;
+            set => _lightColor = value;
         }
 
         protected override string VertexShaderResource => "Maga_Avalonia3D.Shaders.SceneRenderer.vert";
@@ -55,11 +70,19 @@ namespace Maga_Avalonia3D.Classes
         {
             base.OnOpenGlInit(gl);
 
-            _colorRLocation = gl.GetUniformLocationString(_shaderProgram, "colorR");
-            _colorGLocation = gl.GetUniformLocationString(_shaderProgram, "colorG");
-            _colorBLocation = gl.GetUniformLocationString(_shaderProgram, "colorB");
+            _lightPosR = gl.GetUniformLocationString(_shaderProgram, "lightPosR");
+            _lightPosG = gl.GetUniformLocationString(_shaderProgram, "lightPosG");
+            _lightPosB = gl.GetUniformLocationString(_shaderProgram, "lightPosB");
 
-            GlCheckError(gl, "Get color uniform locations");
+            _lightColorR = gl.GetUniformLocationString(_shaderProgram, "lightColorR");
+            _lightColorG = gl.GetUniformLocationString(_shaderProgram, "lightColorG");
+            _lightColorB = gl.GetUniformLocationString(_shaderProgram, "lightColorB");
+
+            _objectColorR = gl.GetUniformLocationString(_shaderProgram, "objectColorR");
+            _objectColorG = gl.GetUniformLocationString(_shaderProgram, "objectColorG");
+            _objectColorB = gl.GetUniformLocationString(_shaderProgram, "objectColorB");
+
+            GlCheckError(gl, "Get lighting uniform locations");
         }
 
         protected override void CreateGeometry(GlInterface gl)
@@ -67,6 +90,7 @@ namespace Maga_Avalonia3D.Classes
             _geometryCache[PrimitiveType.Cube] = CreateCubeGeometry(gl);
             _geometryCache[PrimitiveType.Sphere] = CreateSphereGeometry(gl, 32, 32);
             _geometryCache[PrimitiveType.Pyramid] = CreatePyramidGeometry(gl);
+            _geometryCache[PrimitiveType.Plane] = CreatePlaneGeometry(gl);
         }
 
         protected override void OnOpenGlRender(GlInterface gl, int fb)
@@ -97,6 +121,14 @@ namespace Maga_Avalonia3D.Classes
                 new Vector3(0, 1, 0)
             );
 
+            gl.Uniform1f(_lightPosR, _lightPosition.X);
+            gl.Uniform1f(_lightPosG, _lightPosition.Y);
+            gl.Uniform1f(_lightPosB, _lightPosition.Z);
+
+            gl.Uniform1f(_lightColorR, _lightColor.X);
+            gl.Uniform1f(_lightColorG, _lightColor.Y);
+            gl.Uniform1f(_lightColorB, _lightColor.Z);
+
             foreach (var prim in _primitives)
             {
                 if (!_geometryCache.TryGetValue(prim.Type, out var geo))
@@ -110,9 +142,9 @@ namespace Maga_Avalonia3D.Classes
                 SetUniformMatrix4(gl, _view, _viewMatrix);
                 SetUniformMatrix4(gl, _projection, _projectionMatrix);
 
-                gl.Uniform1f(_colorRLocation, prim.Color.X);
-                gl.Uniform1f(_colorGLocation, prim.Color.Y);
-                gl.Uniform1f(_colorBLocation, prim.Color.Z);
+                gl.Uniform1f(_objectColorR, prim.Color.X);
+                gl.Uniform1f(_objectColorG, prim.Color.Y);
+                gl.Uniform1f(_objectColorB, prim.Color.Z);
 
                 gl.BindVertexArray(geo.vao);
                 gl.DrawArrays(GL_TRIANGLES, 0, geo.vertexCount);
@@ -145,17 +177,11 @@ namespace Maga_Avalonia3D.Classes
                 vertices.AddRange(new[] { x3, y3, z3, normal.X, normal.Y, normal.Z });
             });
 
-            // front
             addFace(-0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f);
-            // back
             addFace(-0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f);
-            // left
             addFace(-0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f);
-            // right
             addFace(0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f);
-            // top
             addFace(-0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f);
-            // bottom
             addFace(-0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
 
             int vao = gl.GenVertexArray();
@@ -232,6 +258,8 @@ namespace Maga_Avalonia3D.Classes
         {
             var vertices = new List<float>();
 
+            float baseRadius = 0.5f;
+
             for (int i = 0; i <= stacks; i++)
             {
                 float phi = MathF.PI * i / stacks;
@@ -244,9 +272,9 @@ namespace Maga_Avalonia3D.Classes
                     float sinTheta = MathF.Sin(theta);
                     float cosTheta = MathF.Cos(theta);
 
-                    float x = sinPhi * cosTheta;
-                    float y = cosPhi;
-                    float z = sinPhi * sinTheta;
+                    float x = baseRadius * sinPhi * cosTheta;
+                    float y = baseRadius * cosPhi;
+                    float z = baseRadius * sinPhi * sinTheta;
 
                     vertices.AddRange(new[] { x, y, z, x, y, z });
                 }
@@ -294,6 +322,50 @@ namespace Maga_Avalonia3D.Classes
             gl.BindVertexArray(0);
 
             return (vao, indexedVertices.Count / 6);
+        }
+
+        private (int vao, int vertexCount) CreatePlaneGeometry(GlInterface gl)
+        {
+            // Плоскость 10x10 в плоскости XZ, Y=0, нормаль вверх
+            var vertices = new List<float>();
+            float size = 5.0f;
+
+            // Четыре угла
+            var corners = new[]
+            {
+                new Vector3(-size, 0, -size),
+                new Vector3( size, 0, -size),
+                new Vector3( size, 0,  size),
+                new Vector3(-size, 0,  size)
+            };
+
+            var normal = new Vector3(0, 1, 0); // вверх
+
+            // Два треугольника
+            foreach (var v in new[] { corners[0], corners[1], corners[2], corners[0], corners[2], corners[3] })
+            {
+                vertices.AddRange(new[] { v.X, v.Y, v.Z, normal.X, normal.Y, normal.Z });
+            }
+
+            int vao = gl.GenVertexArray();
+            gl.BindVertexArray(vao);
+
+            int vbo = gl.GenBuffer();
+            gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
+            unsafe
+            {
+                fixed (float* ptr = vertices.ToArray())
+                    gl.BufferData(GL_ARRAY_BUFFER, vertices.Count * sizeof(float), (nint)ptr, GL_STATIC_DRAW);
+            }
+
+            gl.VertexAttribPointer(0, 3, GL_FLOAT, 0, 6 * sizeof(float), 0);
+            gl.EnableVertexAttribArray(0);
+            gl.VertexAttribPointer(1, 3, GL_FLOAT, 0, 6 * sizeof(float), 3 * sizeof(float));
+            gl.EnableVertexAttribArray(1);
+
+            gl.BindVertexArray(0);
+
+            return (vao, vertices.Count / 6);
         }
 
         protected override void UpdateUniforms(GlInterface gl, int width, int height)
