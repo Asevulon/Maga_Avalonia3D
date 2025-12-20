@@ -5,11 +5,11 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Maga_Avalonia3D.Surface">
 	<Viewbox>
-		<Canvas
-          x:Name="canvas"
+		<Grid
+          x:Name="grid"
           Background="Transparent"
           Width="800"
           Height="450">
-		</Canvas>
+		</Grid>
 	</Viewbox>
 </UserControl>

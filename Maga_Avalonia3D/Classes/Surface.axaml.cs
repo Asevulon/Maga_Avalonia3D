@@ -1,4 +1,7 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Data;
+using Avalonia.Media;
 using Maga_Avalonia3D.Classes;
 using System;
 using System.Collections.Generic;
@@ -10,20 +13,79 @@ public partial class Surface : UserControl
 {
     private SurfaceView _surfaceView;
 
+    public static readonly StyledProperty<Color> SurfaceColorProperty =
+        AvaloniaProperty.Register<Surface, Color>(nameof(SurfaceColor), Colors.AliceBlue);
+    public Color SurfaceColor
+    {
+        get => GetValue(SurfaceColorProperty);
+        set => SetValue(SurfaceColorProperty, value);
+    }
+
+    public static readonly StyledProperty<Color> AxesColorProperty =
+        AvaloniaProperty.Register<Surface, Color>(nameof(AxesColor), Colors.Gold);
+    public Color AxesColor
+    {
+        get => GetValue(AxesColorProperty);
+        set => SetValue(AxesColorProperty, value);
+    }
+
+    public static readonly StyledProperty<bool> ShowAxesProperty =
+    AvaloniaProperty.Register<Surface, bool>(nameof(ShowAxes), true);
+    public bool ShowAxes
+    {
+        get => GetValue(ShowAxesProperty);
+        set => SetValue(ShowAxesProperty, value);
+    }
+
+    public static readonly StyledProperty<Color> ClearColorProperty =
+        AvaloniaProperty.Register<Surface, Color>(nameof(ClearColor), Colors.Black);
+    public Color ClearColor
+    {
+        get => GetValue(ClearColorProperty);
+        set => SetValue(ClearColorProperty, value);
+    }
+
+    public static readonly StyledProperty<Color> LightColorProperty =
+    AvaloniaProperty.Register<Surface, Color>(nameof(LightColor), Colors.White);
+    public Color LightColor
+    {
+        get => GetValue(LightColorProperty);
+        set => SetValue(LightColorProperty, value);
+    }
+
+    public static readonly StyledProperty<double> LightPositionXProperty =
+    AvaloniaProperty.Register<Surface, double>(nameof(LightPositionX), 0.0);
+    public double LightPositionX
+    {
+        get => GetValue(LightPositionXProperty);
+        set => SetValue(LightPositionXProperty, value);
+    }
+
+    public static readonly StyledProperty<double> LightPositionYProperty =
+        AvaloniaProperty.Register<Surface, double>(nameof(LightPositionY), 0.0);
+    public double LightPositionY
+    {
+        get => GetValue(LightPositionYProperty);
+        set => SetValue(LightPositionYProperty, value);
+    }
+
+    public static readonly StyledProperty<double> LightPositionZProperty =
+        AvaloniaProperty.Register<Surface, double>(nameof(LightPositionZ), 3.0);
+    public double LightPositionZ
+    {
+        get => GetValue(LightPositionZProperty);
+        set => SetValue(LightPositionZProperty, value);
+    }
+
     public Surface()
     {
         InitializeComponent();
 
         // Создаем SurfaceView вместо SurfaceRenderer
         _surfaceView = new SurfaceView();
-        _surfaceView.Width = canvas.Width;
-        _surfaceView.Height = canvas.Height;
 
-        // Настройка параметров через SurfaceView (он проксирует к SurfaceRenderer)
-        _surfaceView.ClearColor = new Vector3(0.1f, 0.1f, 0.1f);
-        _surfaceView.LightPosition = new Vector3(0f, 0f, 3.0f);
-        _surfaceView.LightColor = new Vector3(1.0f, 1.0f, 1.0f);
-        _surfaceView.SurfaceColor = new Vector3(0.3f, 0.6f, 1.0f); // Голубой цвет для купола
+        // Подписываемся на изменения свойств
+        RegisterPropertyChangedCallbacks();
 
         // Генерируем точки для гауссова купола
         var gaussianPoints = GenerateGaussianDomePoints(200);
@@ -32,8 +94,30 @@ public partial class Surface : UserControl
         _surfaceView.SetSurfacePoints(gaussianPoints);
 
         // Добавляем SurfaceView в UI вместо SurfaceRenderer
-        canvas.Children.Add(_surfaceView);
+        grid.Children.Add(_surfaceView);
+
+        grid.LayoutUpdated += (sender, e) =>
+        {
+            _surfaceView.Width = grid.Bounds.Width;
+            _surfaceView.Height = grid.Bounds.Height;
+        };
+
     }
+
+    private void RegisterPropertyChangedCallbacks()
+    {
+        // Регистрируем обработчики изменений для всех свойств
+        this.GetObservable(SurfaceColorProperty).Subscribe(_ => _surfaceView.SurfaceColor = ColorToVector3(SurfaceColor));
+        this.GetObservable(AxesColorProperty).Subscribe(_ => _surfaceView.AxesColor = ColorToVector3(AxesColor));
+        this.GetObservable(ShowAxesProperty).Subscribe(_ => _surfaceView.ShowAxes = ShowAxes);
+        this.GetObservable(ClearColorProperty).Subscribe(_ => _surfaceView.ClearColor = ColorToVector3(ClearColor));
+        this.GetObservable(LightColorProperty).Subscribe(_ => _surfaceView.LightColor = ColorToVector3(LightColor));
+        this.GetObservable(LightPositionXProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
+        this.GetObservable(LightPositionYProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
+        this.GetObservable(LightPositionZProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
+    }
+
+    Vector3 ColorToVector3(Color c) => new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
 
     private List<Vector3> GenerateGaussianDomePoints(int pointCount)
     {

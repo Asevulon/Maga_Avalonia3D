@@ -1,8 +1,11 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -40,7 +43,24 @@ namespace Maga_Avalonia3D.Classes
             set => _surfaceRenderer.SurfaceColor = value;
         }
 
+        public Vector3 AxesColor
+        {
+            get => _surfaceRenderer.AxesColor;
+            set => _surfaceRenderer.AxesColor = value;
+        }
+
+        public bool ShowAxes
+        {
+            get => _surfaceRenderer.ShowAxes;
+            set => _surfaceRenderer.ShowAxes = value;
+        }
+
         public CameraController Camera => _cameraController;
+        Canvas _canvas;
+        TextBlock _xCaption = new TextBlock();
+        TextBlock _yCaption = new TextBlock();
+        TextBlock _zCaption = new TextBlock();
+        TextBlock _0Caption = new TextBlock();
 
         public SurfaceView()
         {
@@ -57,14 +77,29 @@ namespace Maga_Avalonia3D.Classes
             _surfaceRenderer.ShowAxes = true;
 
             // Добавляем SurfaceRenderer в визуальное дерево
-            Content = new Grid
+            _canvas = new Canvas
             {
                 Children =
                 {
-                    _surfaceRenderer
+                    _surfaceRenderer,
+                    _xCaption,
+                    _yCaption,
+                    _zCaption,
+                    _0Caption
                 },
-                Background = new SolidColorBrush(new Color(0,0,0,0))
+                Background = new SolidColorBrush(new Color(0,0,0,0)),
             };
+
+            Content = _canvas;
+
+            this.LayoutUpdated += (sender, e) =>
+            {
+                _canvas.Width = Bounds.Width;
+                _canvas.Height = Bounds.Height;
+                _surfaceRenderer.Width = Bounds.Width;
+                _surfaceRenderer.Height = Bounds.Height;
+            };
+
 
             // Подписываемся на события ввода
             this.PointerPressed += OnPointerPressed;
@@ -138,6 +173,39 @@ namespace Maga_Avalonia3D.Classes
 
                 // Запрашиваем перерисовку
                 _surfaceRenderer.RequestNextFrameRendering();
+
+                var caps = _surfaceRenderer.AxisCaptions;
+                if (ShowAxes && caps != null)
+                {
+                    _0Caption.IsVisible = true;
+                    _xCaption.IsVisible = true;
+                    _yCaption.IsVisible = true;
+                    _zCaption.IsVisible = true;
+
+
+                    _0Caption.Text = $"{caps[0].world.X} {caps[0].world.Y} {caps[0].world.Z}";
+                    Canvas.SetLeft(_0Caption, caps[0].screen.X);
+                    Canvas.SetTop(_0Caption, caps[0].screen.Y);
+
+                    _xCaption.Text = caps[1].world.X.ToString();
+                    Canvas.SetLeft(_xCaption, caps[1].screen.X);
+                    Canvas.SetTop(_xCaption, caps[1].screen.Y);
+
+                    _yCaption.Text = caps[2].world.Y.ToString();
+                    Canvas.SetLeft(_yCaption, caps[2].screen.X);
+                    Canvas.SetTop(_yCaption, caps[2].screen.Y);
+
+                    _zCaption.Text = caps[3].world.Z.ToString();
+                    Canvas.SetLeft(_zCaption, caps[3].screen.X);
+                    Canvas.SetTop(_zCaption, caps[3].screen.Y);
+                }
+                else
+                {
+                    _0Caption.IsVisible = false;
+                    _xCaption.IsVisible = false;
+                    _yCaption.IsVisible = false;
+                    _zCaption.IsVisible = false;
+                }
             }
         }
 

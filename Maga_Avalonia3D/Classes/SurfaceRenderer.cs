@@ -80,6 +80,12 @@ namespace Maga_Avalonia3D.Classes
         private bool _axesGeometryDirty = false;
 
         private (float minX, float maxX, float minY, float maxY, float minZ, float maxZ) _AxisBounds;
+        private (Vector3 world, Vector2 screen)[] _axisCaptions;
+
+        public (Vector3 world, Vector2 screen)[] AxisCaptions
+        {
+            get => _axisCaptions;
+        }
 
         public bool IsInitialized => _isInitialized;
         public Vector3 ClearColor
@@ -203,12 +209,12 @@ namespace Maga_Avalonia3D.Classes
             }
 
             // Получаем границы осей 
-            float axisMinX = GetLowerBound(minX);
-            float axisMaxX = GetUpperBound(maxX);
-            float axisMinY = GetLowerBound(minY);
-            float axisMaxY = GetUpperBound(maxY);
-            float axisMinZ = GetLowerBound(minZ);
-            float axisMaxZ = GetUpperBound(maxZ);
+            float axisMinX = (minX);
+            float axisMaxX = (maxX);
+            float axisMinY = (minY);
+            float axisMaxY = (maxY);
+            float axisMinZ = (minZ);
+            float axisMaxZ = (maxZ);
 
             _AxisBounds = (axisMinX, axisMaxX, axisMinY, axisMaxY, axisMinZ, axisMaxZ);
 
@@ -779,6 +785,8 @@ namespace Maga_Avalonia3D.Classes
             SetUniformMatrix4(gl, _axesModelLoc, modelMatrix);
             SetUniformMatrix4(gl, _axesViewLoc, viewMatrix);
             SetUniformMatrix4(gl, _axesProjectionLoc, projectionMatrix);
+
+            _axisCaptions = AxesToScreen(width, height);
         }
 
         protected override void OnOpenGlRender(GlInterface gl, int fb)
@@ -787,6 +795,8 @@ namespace Maga_Avalonia3D.Classes
             int height = (int)Bounds.Height;
 
             gl.Viewport(0, 0, width, height);
+
+            gl.ClearColor(_clearColor.X, _clearColor.Y, _clearColor.Z, 1.0f);
             gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Пересоздаем геометрию осей, если она "грязная"
@@ -871,5 +881,39 @@ namespace Maga_Avalonia3D.Classes
             base.OnOpenGlDeinit(gl);
             CleanupGeometry(gl);
         }
+
+        private (Vector3 world, Vector2 screen)[] AxesToScreen(int width, int height)
+        {
+            // Применяем матрицы преобразования
+            var modelView = Matrix4x4.Identity * _viewMatrix;
+            var mvp = modelView * _projectionMatrix;
+
+            (Vector3 worldPoint, Vector2 screenPoint)[] points =
+            {
+                (new Vector3(_AxisBounds.minX, _AxisBounds.minY, _AxisBounds.minZ), new Vector2()),
+                (new Vector3(_AxisBounds.maxX, _AxisBounds.minY, _AxisBounds.minZ), new Vector2()),
+                (new Vector3(_AxisBounds.minX, _AxisBounds.maxY, _AxisBounds.minZ), new Vector2()),
+                (new Vector3(_AxisBounds.minX, _AxisBounds.minY, _AxisBounds.maxZ), new Vector2()),
+            };
+
+            for (var i = 0; i < points.Length; i++)
+            {
+                var p4 = new Vector4(points[i].worldPoint, 1.0f);
+                var transformed = Vector4.Transform(p4, mvp);
+
+                if(Math.Abs(transformed.W) > float.Epsilon)
+                {
+                    transformed.X /= transformed.W;
+                    transformed.Y /= transformed.W;
+                    transformed.Z /= transformed.W;
+                }
+
+                points[i].screenPoint.X = ((transformed.X + 1.0f) * 0.5f) * width;
+                points[i].screenPoint.Y = ((1.0f - transformed.Y) * 0.5f) * height;
+            }
+
+            return points;
+        }
+                
     }
 }

@@ -13,5 +13,10 @@
 	  <vm:MainViewModel/>
   </Design.DataContext>
 
-  <classes:Surface/>
+  <classes:Surface
+    SurfaceColor="SteelBlue"
+    AxesColor="Gold"
+    ClearColor="Black"
+    ShowAxes="True"
+  />
 </UserControl>
