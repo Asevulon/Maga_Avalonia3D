@@ -55,6 +55,13 @@ namespace Maga_Avalonia3D.Classes
             set => _surfaceRenderer.ShowAxes = value;
         }
 
+        private int _digits = 2;
+        public int Digits
+        {
+            get => _digits;
+            set => _digits = value;
+        }
+
         public CameraController Camera => _cameraController;
         Canvas _canvas;
         TextBlock _xCaption = new TextBlock();
@@ -182,21 +189,23 @@ namespace Maga_Avalonia3D.Classes
                     _yCaption.IsVisible = true;
                     _zCaption.IsVisible = true;
 
-
-                    _0Caption.Text = $"{caps[0].world.X} {caps[0].world.Y} {caps[0].world.Z}";
-                    Canvas.SetLeft(_0Caption, caps[0].screen.X);
+                    string formatted = string.Format(
+                        $"{{0:F{_digits}}} {{1:F{_digits}}} {{2:F{_digits}}}",
+                        caps[0].world.X, caps[0].world.Y, caps[0].world.Z);
+                    _0Caption.Text = formatted;
+                    Canvas.SetLeft(_0Caption, caps[0].screen.X - _0Caption.Bounds.Width / 2);
                     Canvas.SetTop(_0Caption, caps[0].screen.Y);
 
-                    _xCaption.Text = caps[1].world.X.ToString();
+                    _xCaption.Text = string.Format($"{{0:F{_digits}}}", caps[1].world.X);
                     Canvas.SetLeft(_xCaption, caps[1].screen.X);
                     Canvas.SetTop(_xCaption, caps[1].screen.Y);
 
-                    _yCaption.Text = caps[2].world.Y.ToString();
-                    Canvas.SetLeft(_yCaption, caps[2].screen.X);
+                    _yCaption.Text = string.Format($"{{0:F{_digits}}}", caps[2].world.Y);
+                    Canvas.SetLeft(_yCaption, caps[2].screen.X - _yCaption.Bounds.Width);
                     Canvas.SetTop(_yCaption, caps[2].screen.Y);
 
-                    _zCaption.Text = caps[3].world.Z.ToString();
-                    Canvas.SetLeft(_zCaption, caps[3].screen.X);
+                    _zCaption.Text = string.Format($"{{0:F{_digits}}}", caps[3].world.Z);
+                    Canvas.SetLeft(_zCaption, caps[3].screen.X - _zCaption.Bounds.Width);
                     Canvas.SetTop(_zCaption, caps[3].screen.Y);
                 }
                 else

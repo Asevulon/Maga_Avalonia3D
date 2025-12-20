@@ -18,5 +18,6 @@
     AxesColor="Gold"
     ClearColor="Black"
     ShowAxes="True"
+    Digits="3"
   />
 </UserControl>

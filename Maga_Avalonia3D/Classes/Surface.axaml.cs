@@ -77,6 +77,14 @@ public partial class Surface : UserControl
         set => SetValue(LightPositionZProperty, value);
     }
 
+    public static readonly StyledProperty<int> DigitsProperty =
+        AvaloniaProperty.Register<Surface, int>(nameof(DigitsProperty), 2);
+    public int Digits
+    {
+        get => GetValue(DigitsProperty);
+        set => SetValue(DigitsProperty, value);
+    }
+
     public Surface()
     {
         InitializeComponent();
@@ -115,6 +123,7 @@ public partial class Surface : UserControl
         this.GetObservable(LightPositionXProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
         this.GetObservable(LightPositionYProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
         this.GetObservable(LightPositionZProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
+        this.GetObservable(DigitsProperty).Subscribe(_ => _surfaceView.Digits = Digits);
     }
 
     Vector3 ColorToVector3(Color c) => new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
