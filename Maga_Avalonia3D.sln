@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maga_Avalonia3D", "Maga_Avalonia3D\Maga_Avalonia3D.csproj", "{AA6F6E07-8F5A-4EB9-819B-B096A755A0B2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maga_Avalonia3D.Desktop", "Maga_Avalonia3D.Desktop\Maga_Avalonia3D.Desktop.csproj", "{4E97544F-B430-41FB-9067-5147666026B1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0CCD4452-3C59-4416-908A-E9ED069FAC3B} = {0CCD4452-3C59-4416-908A-E9ED069FAC3B}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurfaceClassLib", "SurfaceClassLib\SurfaceClassLib.csproj", "{0CCD4452-3C59-4416-908A-E9ED069FAC3B}"
 EndProject

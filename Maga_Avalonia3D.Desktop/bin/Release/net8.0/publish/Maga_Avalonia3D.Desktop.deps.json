@@ -497,6 +497,7 @@
       "Maga_Avalonia3D/1.0.0": {
         "dependencies": {
           "Avalonia": "11.3.10",
+          "Avalonia.Diagnostics": "11.3.10",
           "Avalonia.Fonts.Inter": "11.3.10",
           "Avalonia.ReactiveUI": "11.3.8",
           "Avalonia.Themes.Fluent": "11.3.10",
