@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using static Avalonia.OpenGL.GlConsts;
 
-namespace Maga_Avalonia3D.Classes
+namespace SurfaceLib
 {
     public abstract class OpenGlCommonBase : OpenGlControlBase
     {
@@ -17,8 +17,8 @@ namespace Maga_Avalonia3D.Classes
         protected int _projection;
         protected string _glShaderVersion = "";
 
-        protected virtual string VertexShaderResource => "Maga_Avalonia3D.Shaders.basic.vert";
-        protected virtual string FragmentShaderResource => "Maga_Avalonia3D.Shaders.basic.frag";
+        protected virtual string VertexShaderResource => "SurfaceClassLib.Shaders.basic.vert";
+        protected virtual string FragmentShaderResource => "SurfaceClassLib.Shaders.basic.frag";
 
         protected override void OnOpenGlInit(GlInterface gl)
         {
@@ -128,10 +128,10 @@ namespace Maga_Avalonia3D.Classes
 
         protected string LoadShaderFromResource(string resourceName)
         {
-            var assembly = Assembly.GetExecutingAssembly();
+            var assembly = typeof(OpenGlCommonBase).Assembly;
             using var stream = assembly.GetManifestResourceStream(resourceName);
             if (stream == null)
-                throw new ArgumentException($"Embedded resource not found: {resourceName}");
+                throw new ArgumentException($"Embedded resource not found: {resourceName}, existing resources: {string.Join(' ', assembly.GetManifestResourceNames())}");
 
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();

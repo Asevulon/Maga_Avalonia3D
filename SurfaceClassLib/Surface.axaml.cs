@@ -2,12 +2,12 @@
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Media;
-using Maga_Avalonia3D.Classes;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Avalonia.Reactive;
 
-namespace Maga_Avalonia3D;
+namespace SurfaceLib;
 
 public partial class Surface : UserControl
 {
@@ -110,6 +110,11 @@ public partial class Surface : UserControl
             _surfaceView.Height = grid.Bounds.Height;
         };
 
+    }
+
+    public List<Vector3> SurfacePoints
+    {
+        set => _surfaceView.SetSurfacePoints(value);
     }
 
     private void RegisterPropertyChangedCallbacks()

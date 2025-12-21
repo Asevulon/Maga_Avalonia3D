@@ -4,7 +4,7 @@ using System.Numerics;
 using Avalonia.OpenGL;
 using static Avalonia.OpenGL.GlConsts;
 
-namespace Maga_Avalonia3D.Classes
+namespace SurfaceLib
 {
     public enum PrimitiveType
     {

@@ -5,7 +5,7 @@ using System.Numerics;
 using Avalonia.OpenGL;
 using static Avalonia.OpenGL.GlConsts;
 
-namespace Maga_Avalonia3D.Classes
+namespace SurfaceLib
 {
     // Добавляем недостающие константы OpenGL ES
     internal static class GlExtensions
@@ -124,11 +124,11 @@ namespace Maga_Avalonia3D.Classes
             set => _customViewMatrix = value;
         }
 
-        protected override string VertexShaderResource => "Maga_Avalonia3D.Shaders.SurfaceRenderer.vert";
-        protected override string FragmentShaderResource => "Maga_Avalonia3D.Shaders.SurfaceRenderer.frag";
+        protected override string VertexShaderResource => "SurfaceClassLib.Shaders.SurfaceRenderer.vert";
+        protected override string FragmentShaderResource => "SurfaceClassLib.Shaders.SurfaceRenderer.frag";
 
-        protected virtual string AxesVertexShaderResource => "Maga_Avalonia3D.Shaders.Axes.vert";
-        protected virtual string AxesFragmentShaderResource => "Maga_Avalonia3D.Shaders.Axes.frag";
+        protected virtual string AxesVertexShaderResource => "SurfaceClassLib.Shaders.Axes.vert";
+        protected virtual string AxesFragmentShaderResource => "SurfaceClassLib.Shaders.Axes.frag";
 
         // Вспомогательные функции для расчета границ
         private float GetLowerBound(float x)
@@ -229,10 +229,10 @@ namespace Maga_Avalonia3D.Classes
                 return;
 
             _surfacePoints = points;
-            RegenerateMesh();
 
             // Рассчитываем границы осей
             CalculateAxisBounds();
+            RegenerateMesh();
 
             // Помечаем, что геометрию осей нужно пересоздать
             _axesGeometryDirty = true;

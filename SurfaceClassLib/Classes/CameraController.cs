@@ -2,7 +2,7 @@
 using System.Numerics;
 using Avalonia;
 
-namespace Maga_Avalonia3D.Classes
+namespace SurfaceLib
 {
     public class CameraController
     {
@@ -17,7 +17,7 @@ namespace Maga_Avalonia3D.Classes
         public float Distance { get; set; } = 5f; // Расстояние до цели
 
         // Ограничения
-        public float MinDistance { get; set; } = 1.0f;
+        public float MinDistance { get; set; } = 0.0f;
         public float MaxDistance { get; set; } = 20.0f;
         public float MaxPitch { get; set; } = MathF.PI / 2 * 0.9f; // Не позволять переворачиваться
 

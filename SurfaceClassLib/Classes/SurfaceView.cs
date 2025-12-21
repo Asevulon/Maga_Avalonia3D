@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Maga_Avalonia3D.Classes
+namespace SurfaceLib
 {
     public class SurfaceView : UserControl
     {
@@ -124,6 +124,23 @@ namespace Maga_Avalonia3D.Classes
         // Установка точек поверхности
         public void SetSurfacePoints(List<Vector3> points)
         {
+            var minX = points.Min(p => p.X);
+            var maxX = points.Max(p => p.X);
+            var minY = points.Min(p => p.Y);
+            var maxY = points.Max(p => p.Y);
+            var minZ = points.Min(p => p.Z);
+            var maxZ = points.Max(p => p.Z);
+
+            var target = new Vector3((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2);
+            _cameraController.Target = target;
+
+            var minV = new Vector3(minX, minY, minZ);
+            var maxV = new Vector3(maxX, maxY, maxZ);
+            var dist = maxV - minV;
+            _cameraController.MaxDistance = MathF.Sqrt(dist.X * dist.X + dist.Y * dist.Y + dist.Z * dist.Z) * 10.0f;
+
+            target.Z = maxZ * 10;
+            _surfaceRenderer.LightPosition = target;
             _surfaceRenderer.SetSurfacePoints(points);
         }
 

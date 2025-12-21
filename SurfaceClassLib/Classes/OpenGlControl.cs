@@ -9,7 +9,7 @@ using System.ComponentModel;
 using Avalonia.OpenGL.Egl;
 using System.Runtime.CompilerServices;
 
-namespace Maga_Avalonia3D;
+namespace SurfaceLib;
 internal unsafe class GlColor
 {
     private const float normalizeValue = 255f;
