@@ -4,12 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SurfaceLib.Surface">
-	<Viewbox>
 		<Grid
           x:Name="grid"
-          Background="Transparent"
-          Width="800"
-          Height="450">
+          Background="Transparent">
 		</Grid>
-	</Viewbox>
 </UserControl>

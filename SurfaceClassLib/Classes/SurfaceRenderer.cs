@@ -53,6 +53,9 @@ namespace SurfaceLib
         // Флаг инициализации
         private bool _isInitialized;
 
+        // Флаг невалидных данных
+        private bool _geometryDirty = false;
+
         // Поддержка кастомной матрицы вида
         private bool _useCustomViewMatrix;
         private Matrix4x4 _customViewMatrix;
@@ -236,12 +239,25 @@ namespace SurfaceLib
 
             // Помечаем, что геометрию осей нужно пересоздать
             _axesGeometryDirty = true;
+            _geometryDirty = true;
 
             // Если контекст уже инициализирован, запрашиваем перерисовку
             if (_isInitialized)
             {
                 RequestNextFrameRendering();
             }
+        }
+
+        private void UpdateGeometryBuffers(GlInterface gl)
+        {
+            // Удаляем старые буферы и VAO
+            if (_vao != 0) gl.DeleteVertexArray(_vao);
+            if (_vboVertices != 0) gl.DeleteBuffer(_vboVertices);
+            if (_vboNormals != 0) gl.DeleteBuffer(_vboNormals);
+            if (_vboIndices != 0) gl.DeleteBuffer(_vboIndices);
+
+            // Создаём новые на основе актуальных _vertices, _normals, _indices
+            CreateGeometryBuffers(gl);
         }
 
         private void RegenerateMesh()
@@ -674,6 +690,8 @@ namespace SurfaceLib
             }
 
             CreateGeometryBuffers(gl);
+            _geometryDirty = false;
+
             GlCheckError(gl, "CreateGeometry");
         }
 
@@ -804,6 +822,12 @@ namespace SurfaceLib
             {
                 RecreateAxesGeometry(gl);
                 _axesGeometryDirty = false;
+            }
+
+            if (_geometryDirty && _isInitialized)
+            {
+                UpdateGeometryBuffers(gl);
+                _geometryDirty = false;
             }
 
             // Сначала рисуем поверхность

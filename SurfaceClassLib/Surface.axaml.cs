@@ -85,6 +85,39 @@ public partial class Surface : UserControl
         set => SetValue(DigitsProperty, value);
     }
 
+    public static readonly StyledProperty<float>YawProperty = 
+        AvaloniaProperty.Register<Surface, float>(nameof(YawProperty ),0);
+    public float Yaw
+    {
+        get => GetValue(YawProperty);
+        set => SetValue(YawProperty, value);
+    }
+
+    public static readonly StyledProperty<float>PitchProperty = 
+        AvaloniaProperty.Register<Surface, float>(nameof(PitchProperty ),0);
+    public float Pitch
+    {
+        get => GetValue(PitchProperty);
+        set => SetValue(PitchProperty, value);
+    }
+
+    public static readonly StyledProperty<float> DistanceProperty =
+        AvaloniaProperty.Register<Surface, float>(nameof(DistanceProperty), 1);
+    public float Distance
+    {
+        get => GetValue(DistanceProperty);
+        set => SetValue(DistanceProperty, value);
+    }
+
+    public static readonly StyledProperty<List<Vector3>> PointsProperty =
+        AvaloniaProperty.Register<Surface, List<Vector3>>(nameof(PointsProperty), new List<Vector3>());
+    public List<Vector3> Points
+    {
+        get => GetValue(PointsProperty);
+        set => SetValue(PointsProperty, value);
+    }
+
+
     public Surface()
     {
         InitializeComponent();
@@ -95,12 +128,6 @@ public partial class Surface : UserControl
         // Подписываемся на изменения свойств
         RegisterPropertyChangedCallbacks();
 
-        // Генерируем точки для гауссова купола
-        var gaussianPoints = GenerateGaussianDomePoints(200);
-
-        // Устанавливаем точки поверхности через SurfaceView
-        _surfaceView.SetSurfacePoints(gaussianPoints);
-
         // Добавляем SurfaceView в UI вместо SurfaceRenderer
         grid.Children.Add(_surfaceView);
 
@@ -110,11 +137,6 @@ public partial class Surface : UserControl
             _surfaceView.Height = grid.Bounds.Height;
         };
 
-    }
-
-    public List<Vector3> SurfacePoints
-    {
-        set => _surfaceView.SetSurfacePoints(value);
     }
 
     private void RegisterPropertyChangedCallbacks()
@@ -129,30 +151,13 @@ public partial class Surface : UserControl
         this.GetObservable(LightPositionYProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
         this.GetObservable(LightPositionZProperty).Subscribe(_ => _surfaceView.LightPosition = new Vector3((float)LightPositionX, (float)LightPositionY, (float)LightPositionZ));
         this.GetObservable(DigitsProperty).Subscribe(_ => _surfaceView.Digits = Digits);
+        this.GetObservable(YawProperty).Subscribe(_ => _surfaceView.Camera.Yaw = Yaw);
+        this.GetObservable(PitchProperty).Subscribe(_ => _surfaceView.Camera.Pitch = Pitch);
+        this.GetObservable(DistanceProperty).Subscribe(_ => _surfaceView.Camera.Distance = Distance);
+        this.GetObservable(PointsProperty).Subscribe(_ => _surfaceView.SetSurfacePoints(Points));
     }
 
     Vector3 ColorToVector3(Color c) => new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
-
-    private List<Vector3> GenerateGaussianDomePoints(int pointCount)
-    {
-        var points = new List<Vector3>();
-        Random random = new Random();
-
-        for (int i = 0; i < pointCount; i++)
-        {
-            // Генерируем случайные точки в квадрате [-2, 2] x [-2, 2]
-            float x = (float)(random.NextDouble() * 4 - 2);
-            float y = (float)(random.NextDouble() * 4 - 2);
-
-            // Вычисляем высоту по гауссовой функции
-            float distanceSquared = x * x + y * y;
-            float z = (float)Math.Exp(-distanceSquared * 0.5f) * 1.5f;
-
-            points.Add(new Vector3(x, y, z));
-        }
-
-        return points;
-    }
 }
 
 //using Avalonia;

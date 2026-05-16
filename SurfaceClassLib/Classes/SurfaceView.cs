@@ -1,13 +1,9 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Input;
-using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Threading;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace SurfaceLib
@@ -18,7 +14,7 @@ namespace SurfaceLib
         private readonly CameraController _cameraController;
         private readonly DispatcherTimer _renderTimer;
 
-        // Свойства для настройки
+        // Свойства для настройки внешнего вида (пробрасываются в рендерер)
         public Vector3 ClearColor
         {
             get => _surfaceRenderer.ClearColor;
@@ -62,20 +58,22 @@ namespace SurfaceLib
             set => _digits = value;
         }
 
+        // Открытый доступ к контроллеру камеры для внешнего управления
         public CameraController Camera => _cameraController;
-        Canvas _canvas;
-        TextBlock _xCaption = new TextBlock();
-        TextBlock _yCaption = new TextBlock();
-        TextBlock _zCaption = new TextBlock();
-        TextBlock _0Caption = new TextBlock();
+
+        // Элементы интерфейса для подписей осей
+        private readonly Canvas _canvas;
+        private readonly TextBlock _xCaption = new TextBlock();
+        private readonly TextBlock _yCaption = new TextBlock();
+        private readonly TextBlock _zCaption = new TextBlock();
+        private readonly TextBlock _0Caption = new TextBlock();
 
         public SurfaceView()
         {
-            // Создаем дочерние компоненты
             _surfaceRenderer = new SurfaceRenderer();
             _cameraController = new CameraController();
 
-            // Настраиваем SurfaceRenderer
+            // Начальные настройки рендерера
             _surfaceRenderer.ClearColor = new Vector3(0.1f, 0.1f, 0.1f);
             _surfaceRenderer.LightPosition = new Vector3(3.0f, 3.0f, 3.0f);
             _surfaceRenderer.LightColor = new Vector3(1.0f, 1.0f, 1.0f);
@@ -83,7 +81,7 @@ namespace SurfaceLib
             _surfaceRenderer.AxesColor = new Vector3(1.0f, 1.0f, 0);
             _surfaceRenderer.ShowAxes = true;
 
-            // Добавляем SurfaceRenderer в визуальное дерево
+            // Компоновка
             _canvas = new Canvas
             {
                 Children =
@@ -94,11 +92,12 @@ namespace SurfaceLib
                     _zCaption,
                     _0Caption
                 },
-                Background = new SolidColorBrush(new Color(0,0,0,0)),
+                Background = new Avalonia.Media.SolidColorBrush(new Avalonia.Media.Color(0, 0, 0, 0)),
             };
 
             Content = _canvas;
 
+            // Автоматическая подгонка размеров
             this.LayoutUpdated += (sender, e) =>
             {
                 _canvas.Width = Bounds.Width;
@@ -107,23 +106,20 @@ namespace SurfaceLib
                 _surfaceRenderer.Height = Bounds.Height;
             };
 
-
-            // Подписываемся на события ввода
-            this.PointerPressed += OnPointerPressed;
-            this.PointerMoved += OnPointerMoved;
-            this.PointerReleased += OnPointerReleased;
-            this.PointerWheelChanged += OnPointerWheelChanged;
-
-            // Создаем таймер для обновления рендера (60 FPS)
+            // Таймер для регулярного обновления матрицы камеры и подписей
             _renderTimer = new DispatcherTimer();
             _renderTimer.Interval = TimeSpan.FromMilliseconds(16); // ~60 FPS
             _renderTimer.Tick += OnRenderTimerTick;
             _renderTimer.Start();
         }
 
-        // Установка точек поверхности
+        // Загрузка точек поверхности (единственный способ обновить данные)
         public void SetSurfacePoints(List<Vector3> points)
         {
+            if (points == null || points.Count == 0)
+                return;
+
+            // Вычисляем границы и позиционируем камеру
             var minX = points.Min(p => p.X);
             var maxX = points.Max(p => p.X);
             var minY = points.Min(p => p.Y);
@@ -139,103 +135,62 @@ namespace SurfaceLib
             var dist = maxV - minV;
             _cameraController.MaxDistance = MathF.Sqrt(dist.X * dist.X + dist.Y * dist.Y + dist.Z * dist.Z) * 10.0f;
 
-            target.Z = maxZ * 10;
-            _surfaceRenderer.LightPosition = target;
+            // Источник света помещаем высоко над поверхностью
+            var lightPos = target with { Z = maxZ * 10 };
+            _surfaceRenderer.LightPosition = lightPos;
+
+            // Передаём точки в рендерер
             _surfaceRenderer.SetSurfacePoints(points);
         }
 
-        // Обработка событий ввода
-        private void OnPointerPressed(object sender, PointerPressedEventArgs e)
-        {
-            var point = e.GetPosition(this);
-
-            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            {
-                _cameraController.StartRotation(point);
-                e.Handled = true;
-            }
-        }
-
-        private void OnPointerMoved(object sender, PointerEventArgs e)
-        {
-            var point = e.GetPosition(this);
-
-            if (_cameraController.IsRotating)
-            {
-                _cameraController.UpdateRotation(point);
-                e.Handled = true;
-            }
-        }
-
-        private void OnPointerReleased(object sender, PointerReleasedEventArgs e)
-        {
-            if (e.InitialPressMouseButton == MouseButton.Left)
-            {
-                _cameraController.EndRotation();
-                e.Handled = true;
-            }
-        }
-
-        private void OnPointerWheelChanged(object sender, PointerWheelEventArgs e)
-        {
-            _cameraController.HandleWheelDelta(e.Delta.Y);
-            e.Handled = true;
-        }
-
-        // Обработчик таймера для обновления рендера
+        // Каждый кадр передаём актуальную матрицу вида и обновляем подписи осей
         private void OnRenderTimerTick(object sender, EventArgs e)
         {
-            // Проверяем инициализацию через публичное свойство
-            if (_surfaceRenderer.IsInitialized)
+            if (!_surfaceRenderer.IsInitialized)
+                return;
+
+            // Передаём матрицу вида от камеры
+            _surfaceRenderer.UseCustomViewMatrix = true;
+            _surfaceRenderer.CustomViewMatrix = _cameraController.GetViewMatrix();
+            _surfaceRenderer.RequestNextFrameRendering();
+
+            // Обновляем экранные координаты подписей осей
+            var captions = _surfaceRenderer.AxisCaptions;
+            if (ShowAxes && captions != null)
             {
-                // Получаем матрицу вида от камеры
-                var viewMatrix = _cameraController.GetViewMatrix();
+                _0Caption.IsVisible = true;
+                _xCaption.IsVisible = true;
+                _yCaption.IsVisible = true;
+                _zCaption.IsVisible = true;
 
-                // Устанавливаем кастомную матрицу вида
-                _surfaceRenderer.UseCustomViewMatrix = true;
-                _surfaceRenderer.CustomViewMatrix = viewMatrix;
+                string formatted = string.Format(
+                    $"{{0:F{_digits}}} {{1:F{_digits}}} {{2:F{_digits}}}",
+                    captions[0].world.X, captions[0].world.Y, captions[0].world.Z);
+                _0Caption.Text = formatted;
+                Canvas.SetLeft(_0Caption, captions[0].screen.X - _0Caption.Bounds.Width / 2);
+                Canvas.SetTop(_0Caption, captions[0].screen.Y);
 
-                // Запрашиваем перерисовку
-                _surfaceRenderer.RequestNextFrameRendering();
+                _xCaption.Text = string.Format($"{{0:F{_digits}}}", captions[1].world.X);
+                Canvas.SetLeft(_xCaption, captions[1].screen.X);
+                Canvas.SetTop(_xCaption, captions[1].screen.Y);
 
-                var caps = _surfaceRenderer.AxisCaptions;
-                if (ShowAxes && caps != null)
-                {
-                    _0Caption.IsVisible = true;
-                    _xCaption.IsVisible = true;
-                    _yCaption.IsVisible = true;
-                    _zCaption.IsVisible = true;
+                _yCaption.Text = string.Format($"{{0:F{_digits}}}", captions[2].world.Y);
+                Canvas.SetLeft(_yCaption, captions[2].screen.X - _yCaption.Bounds.Width);
+                Canvas.SetTop(_yCaption, captions[2].screen.Y);
 
-                    string formatted = string.Format(
-                        $"{{0:F{_digits}}} {{1:F{_digits}}} {{2:F{_digits}}}",
-                        caps[0].world.X, caps[0].world.Y, caps[0].world.Z);
-                    _0Caption.Text = formatted;
-                    Canvas.SetLeft(_0Caption, caps[0].screen.X - _0Caption.Bounds.Width / 2);
-                    Canvas.SetTop(_0Caption, caps[0].screen.Y);
-
-                    _xCaption.Text = string.Format($"{{0:F{_digits}}}", caps[1].world.X);
-                    Canvas.SetLeft(_xCaption, caps[1].screen.X);
-                    Canvas.SetTop(_xCaption, caps[1].screen.Y);
-
-                    _yCaption.Text = string.Format($"{{0:F{_digits}}}", caps[2].world.Y);
-                    Canvas.SetLeft(_yCaption, caps[2].screen.X - _yCaption.Bounds.Width);
-                    Canvas.SetTop(_yCaption, caps[2].screen.Y);
-
-                    _zCaption.Text = string.Format($"{{0:F{_digits}}}", caps[3].world.Z);
-                    Canvas.SetLeft(_zCaption, caps[3].screen.X - _zCaption.Bounds.Width);
-                    Canvas.SetTop(_zCaption, caps[3].screen.Y);
-                }
-                else
-                {
-                    _0Caption.IsVisible = false;
-                    _xCaption.IsVisible = false;
-                    _yCaption.IsVisible = false;
-                    _zCaption.IsVisible = false;
-                }
+                _zCaption.Text = string.Format($"{{0:F{_digits}}}", captions[3].world.Z);
+                Canvas.SetLeft(_zCaption, captions[3].screen.X - _zCaption.Bounds.Width);
+                Canvas.SetTop(_zCaption, captions[3].screen.Y);
+            }
+            else
+            {
+                _0Caption.IsVisible = false;
+                _xCaption.IsVisible = false;
+                _yCaption.IsVisible = false;
+                _zCaption.IsVisible = false;
             }
         }
 
-        // Очистка при удалении
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             _renderTimer.Stop();
@@ -243,7 +198,7 @@ namespace SurfaceLib
             base.OnDetachedFromVisualTree(e);
         }
 
-        // Сброс камеры
+        // Удобный метод для сброса камеры к исходным параметрам
         public void ResetCamera()
         {
             _cameraController.Reset();
