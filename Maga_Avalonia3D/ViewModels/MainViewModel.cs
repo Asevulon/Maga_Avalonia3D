@@ -49,7 +49,7 @@ public class MainViewModel : ViewModelBase, INotifyPropertyChanged
         set { _pitch = value; OnPropertyChanged(); }
     }
 
-    private float _distance = 5;
+    private float _distance = 1.1f;
     public float Distance
     {
         get => _distance;

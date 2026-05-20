@@ -10,15 +10,37 @@ using Avalonia.OpenGL.Egl;
 using System.Runtime.CompilerServices;
 
 namespace SurfaceLib;
+
+/// <summary>
+/// Класс для описания цвета
+/// </summary>
 internal unsafe class GlColor
 {
+    /// <summary>
+    /// Нормируем на 255
+    /// </summary>
     private const float normalizeValue = 255f;
 
+    /// <summary>
+    /// Стандарт RGBA
+    /// </summary>
     private float r = 0;
     private float g = 0;
     private float b = 0;
     private float a = 0;
+
+    /// <summary>
+    /// По умолчанию черный (0, 0, 0, 0)
+    /// </summary>
     public GlColor() { }
+
+    /// <summary>
+    /// Конструктор по цветам
+    /// </summary>
+    /// <param name="pr">Красный</param>
+    /// <param name="pg">Зеленый</param>
+    /// <param name="pb">Голубой</param>
+    /// <param name="pa">Альфа-канал</param>
     public GlColor(float pr, float pg, float pb, float pa)
     {
         r = pr;
@@ -26,6 +48,11 @@ internal unsafe class GlColor
         b = pb;
         a = pa;
     }
+
+    /// <summary>
+    /// Конструктор копирования
+    /// </summary>
+    /// <param name="c">Откуда копируем</param>
     public GlColor(Color c)
     {
         r = c.R;
@@ -34,6 +61,11 @@ internal unsafe class GlColor
         a = c.A;
         Normalize(normalizeValue);
     }
+
+    /// <summary>
+    /// Нормирует цвет
+    /// </summary>
+    /// <param name="n">На что нормируем</param>
     private void Normalize(float n)
     {
         r = r / n;
@@ -42,20 +74,66 @@ internal unsafe class GlColor
         a = a / n;
     }
 
+    /// <summary>
+    /// Скрытое преобразование для бесшовной совместимости со стандартным Avalonia.Media.Color
+    /// </summary>
+    /// <param name="color">Цвет Avalonia.Media.Color</param>
     public static implicit operator GlColor(Color color) => new GlColor(color);
+    /// <summary>
+    /// Скрытое преобразование для бесшовной совместимости со стандартным Avalonia.Media.Color
+    /// </summary>
+    /// <param name="c">Цвет GlColor</param>
     public static implicit operator Color(GlColor c) => new Color((byte)c.AN, (byte)c.RN, (byte)c.GN, (byte)c.BN);
+    /// <summary>
+    /// Преобразование к строке для логирования
+    /// </summary>
+    /// <param name="c">Цвет</param>
     public static implicit operator string(GlColor c) => new string($"GlColor({c.r}, {c.g}, {c.b}, {c.a}) -> RGBA");
 
+    /// <summary>
+    /// Красный в диапазоне [0, 1]
+    /// </summary>
     public float R { set => r = value; get => r; }
+
+    /// <summary>
+    /// Зеленый в диапазоне [0, 1]
+    /// </summary>
     public float G { set => g = value; get => g; }
+
+    /// <summary>
+    /// Синий в диапазоне [0, 1]
+    /// </summary>
     public float B { set => b = value; get => b; }
+    
+    /// <summary>
+    /// Альфа-канал в диапазоне [0, 1]
+    /// </summary>
     public float A { set => a = value; get => a; }
+
+    /// <summary>
+    /// Красный в диапазоне [0, 255]
+    /// </summary>
     public float RN { get => r * normalizeValue; }
+
+    /// <summary>
+    /// Зеленый в диапазоне [0, 255]
+    /// </summary>
     public float GN { get => g * normalizeValue; }
+
+    /// <summary>
+    /// Синий в диапазоне [0, 255]
+    /// </summary>
     public float BN { get => b * normalizeValue; }
+
+    /// <summary>
+    /// Альфа-канал в диапазоне [0, 255]
+    /// </summary>
     public float AN { get => a * normalizeValue; }
 }
 
+/// <summary>
+/// Некоторые константы которые не представлены в Avalonia по-умолчанию
+/// </summary>
 internal static class MyGlConsts
 {
     public const int GL_UNSIGNED_INT = 0x1405;
@@ -68,8 +146,16 @@ internal static class MyGlConsts
     public const int GL_OUT_OF_MEMORY = 1285;
     public const int GL_INVALID_FRAMEBUFFER_OPERATION = 1286;
 }
+
+/// <summary>
+/// Основа для создания элементов управления с низкоуровневым OpenGl интерфейсом
+/// </summary>
 internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 {
+    /// <summary>
+    /// Класс для удобного представления точки.
+    /// В таком виде она будет упаковываться и передаваться в контекст OpenGl.
+    /// </summary>
     struct GlPoint
     {
         public float x;
@@ -114,15 +200,20 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
 
     //Control fields
     private GlColor _background = new GlColor();
+
+    /// <summary>
+    /// Цвет фона
+    /// </summary>
     public GlColor Background
     {
         set => _background = value;
         get => _background;
     }
-    public void SetBackground(Avalonia.Media.Color color) => _background = color;
-    public void SetBackground(GlColor color) => _background = color;
 
-    //Base GL Functions
+    /// <summary>
+    /// Инициализация OpenGl
+    /// </summary>
+    /// <param name="gl"></param>
     protected override void OnOpenGlInit(GlInterface gl)
     {
         base.OnOpenGlInit(gl);
@@ -144,6 +235,10 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "Init");
     }
 
+    /// <summary>
+    /// Деинициализация OpenGl
+    /// </summary>
+    /// <param name="gl"></param>
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         base.OnOpenGlDeinit(gl);
@@ -159,6 +254,11 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         gl.DeleteShader(_vertexShader);
     }
 
+    /// <summary>
+    /// Отрисовка
+    /// </summary>
+    /// <param name="gl"></param>
+    /// <param name="fb"></param>
     protected override void OnOpenGlRender(GlInterface gl, int fb)
     {
         int width = (int)Bounds.Width;
@@ -210,6 +310,10 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "OnOpenGlRender");
     }
 
+    /// <summary>
+    /// Создает буффер вершин
+    /// </summary>
+    /// <param name="gl"></param>
     protected void CreateVertexBuffer(GlInterface gl)
     {
         //Создали объект массива вершин
@@ -295,6 +399,11 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "Create VAO 2");
     }
 
+    /// <summary>
+    /// Подготовка шейдеров
+    /// </summary>
+    /// <param name="gl"></param>
+    /// <exception cref="Exception"></exception>
     void ConfigureShaders(GlInterface gl)
     {
         var v = gl.GetString(GL_VERSION);
@@ -341,6 +450,14 @@ internal class OpenGlControl : OpenGlControlBase, INotifyPropertyChanged
         GlCheckError(gl, "ConfigureShaders");
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="gl"></param>
+    /// <param name="what"></param>
+    /// <param name="lineNumber"></param>
+    /// <param name="caller"></param>
+    /// <exception cref="Exception"></exception>
     void GlCheckError(GlInterface gl, string what = "no info", [CallerLineNumber] int lineNumber = 0, [CallerMemberName] string caller = null)
     {
         int error = gl.GetError();

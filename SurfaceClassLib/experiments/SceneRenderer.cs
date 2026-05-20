@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Avalonia.OpenGL;
+using SurfaceLib;
 using static Avalonia.OpenGL.GlConsts;
 
-namespace SurfaceLib
+namespace SurfaceClassLib.experiments
 {
     public enum PrimitiveType
     {

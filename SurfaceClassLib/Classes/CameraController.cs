@@ -3,16 +3,32 @@ using System.Numerics;
 
 namespace SurfaceLib
 {
+    /// <summary>
+    /// Класс управления камерой
+    /// Предоставляет интерфейсы для настройки положения камеры
+    /// Формирует матрицу вида
+    /// </summary>
     public class CameraController
     {
-        // Параметры камеры для системы координат Z-UP
-        public Vector3 Target { get; set; } = new Vector3(0, 0, 0);   // центр сцены
-        public Vector3 Up { get; set; } = new Vector3(0, 0, 1);       // ось Z вверх
+        /// <summary>
+        /// Центр сцены, на него направлена камера
+        /// </summary>
+        public Vector3 Target { get; set; } = new Vector3(0, 0, 0);
+
+        /// <summary>
+        /// Направление оси Z, она задает направление "вверх"
+        /// </summary>
+        public Vector3 Up { get; set; } = new Vector3(0, 0, 1);
 
         private float _yaw = 0f;
         private float _pitch = 0f;
         private float _distance = 5f;
+        private float _absolute_distance = 1f;
 
+        /// <summary>
+        /// Порот вокруг оси Z
+        /// Вращает поверхность вокруг цетнтральной вертикальной оси
+        /// </summary>
         public float Yaw
         {
             get => _yaw;
@@ -25,23 +41,44 @@ namespace SurfaceLib
             }
         }
 
+        /// <summary>
+        /// Поворот вокруг оси X.
+        /// Наклоняет поверхность относительно горизонта.
+        /// </summary>
         public float Pitch
         {
             get => _pitch;
             set => _pitch = Math.Clamp(value, -MaxPitch, MaxPitch);
         }
 
+        /// <summary>
+        /// Расстояние от камеры до центра (относительное)
+        /// </summary>
         public float Distance
         {
             get =>  Math.Clamp(_distance, MinDistance, MaxDistance);
             set => _distance = value;
         }
 
+        /// <summary>
+        /// Соотвествует длине диагонали трехмерной сцены.
+        /// Расстояние от камеры до цетра сцены определяется как AbsoluteDistance * Distance.
+        /// </summary>
+        public float AbsoluteDistance
+        {
+            get => _absolute_distance;
+            set => _absolute_distance = value;
+        }
+
         // Ограничения
         public float MinDistance { get; set; } = 0.1f;
-        public float MaxDistance { get; set; } = 20.0f;
+        public float MaxDistance { get; set; } = 5.0f;
         public float MaxPitch { get; set; } = MathF.PI / 2 * 0.9f;   // почти 90°, чтобы не переворачиваться
 
+        /// <summary>
+        /// Вычисляет видовую матрицу
+        /// </summary>
+        /// <returns>Видовая матрица</returns>
         public Matrix4x4 GetViewMatrix()
         {
             // Вычисляем направление камеры в системе Z-up
@@ -52,17 +89,19 @@ namespace SurfaceLib
             );
 
             // Позиция камеры = цель + направление * расстояние
-            var position = Target + direction * Distance;
+            var position = Target + direction * Distance * AbsoluteDistance;
 
             return Matrix4x4.CreateLookAt(position, Target, Up);
         }
 
+        /// <summary>
+        /// Сброс положения камеры
+        /// </summary>
         public void Reset()
         {
             Yaw = 0f;
             Pitch = 0f;
             Distance = 5f;
-            Console.WriteLine("[CAMERA Z-up] Сброс в начальное положение");
         }
     }
 }

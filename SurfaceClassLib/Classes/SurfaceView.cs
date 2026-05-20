@@ -8,43 +8,66 @@ using System.Numerics;
 
 namespace SurfaceLib
 {
+    /// <summary>
+    /// Класс который управляет управляет рендером и наполнением элемента управления
+    /// </summary>
     public class SurfaceView : UserControl
     {
+        // Отрисовщик
         private readonly SurfaceRenderer _surfaceRenderer;
+        // Управление камерой
         private readonly CameraController _cameraController;
+        // Таймер, по которму срабатывает отрисовка
         private readonly DispatcherTimer _renderTimer;
 
-        // Свойства для настройки внешнего вида (пробрасываются в рендерер)
+        /// <summary>
+        /// Цвет фона
+        /// </summary>
         public Vector3 ClearColor
         {
             get => _surfaceRenderer.ClearColor;
             set => _surfaceRenderer.ClearColor = value;
         }
 
+        /// <summary>
+        /// Позиция источника света
+        /// </summary>
         public Vector3 LightPosition
         {
             get => _surfaceRenderer.LightPosition;
             set => _surfaceRenderer.LightPosition = value;
         }
 
+        /// <summary>
+        /// Цвет освещения
+        /// </summary>
         public Vector3 LightColor
         {
             get => _surfaceRenderer.LightColor;
             set => _surfaceRenderer.LightColor = value;
         }
 
+        /// <summary>
+        /// Цвет отрисовываемой поверхности
+        /// </summary>
         public Vector3 SurfaceColor
         {
             get => _surfaceRenderer.SurfaceColor;
             set => _surfaceRenderer.SurfaceColor = value;
         }
 
+        /// <summary>
+        /// Цвет осей координат
+        /// </summary>
         public Vector3 AxesColor
         {
             get => _surfaceRenderer.AxesColor;
             set => _surfaceRenderer.AxesColor = value;
         }
 
+        /// <summary>
+        /// Показывать ли оси координат
+        /// </summary>
         public bool ShowAxes
         {
             get => _surfaceRenderer.ShowAxes;
@@ -52,13 +75,19 @@ namespace SurfaceLib
         }
 
         private int _digits = 2;
+
+        /// <summary>
+        /// Количество символов после зяпятой в подписи к осям
+        /// </summary>
         public int Digits
         {
             get => _digits;
             set => _digits = value;
         }
 
-        // Открытый доступ к контроллеру камеры для внешнего управления
+        /// <summary>
+        /// Доступ к управлению камерой
+        /// </summary>
         public CameraController Camera => _cameraController;
 
         // Элементы интерфейса для подписей осей
@@ -73,7 +102,7 @@ namespace SurfaceLib
             _surfaceRenderer = new SurfaceRenderer();
             _cameraController = new CameraController();
 
-            // Начальные настройки рендерера
+            // Начальные настройки отрисовщика
             _surfaceRenderer.ClearColor = new Vector3(0.1f, 0.1f, 0.1f);
             _surfaceRenderer.LightPosition = new Vector3(3.0f, 3.0f, 3.0f);
             _surfaceRenderer.LightColor = new Vector3(1.0f, 1.0f, 1.0f);
@@ -108,12 +137,15 @@ namespace SurfaceLib
 
             // Таймер для регулярного обновления матрицы камеры и подписей
             _renderTimer = new DispatcherTimer();
-            _renderTimer.Interval = TimeSpan.FromMilliseconds(16); // ~60 FPS
+            _renderTimer.Interval = TimeSpan.FromMilliseconds(16); // примерно 60 FPS
             _renderTimer.Tick += OnRenderTimerTick;
             _renderTimer.Start();
         }
 
-        // Загрузка точек поверхности (единственный способ обновить данные)
+        /// <summary>
+        /// Задать точки поверхности
+        /// </summary>
+        /// <param name="points">Точки поверхности</param>
         public void SetSurfacePoints(List<Vector3> points)
         {
             if (points == null || points.Count == 0)
@@ -133,7 +165,8 @@ namespace SurfaceLib
             var minV = new Vector3(minX, minY, minZ);
             var maxV = new Vector3(maxX, maxY, maxZ);
             var dist = maxV - minV;
-            _cameraController.MaxDistance = MathF.Sqrt(dist.X * dist.X + dist.Y * dist.Y + dist.Z * dist.Z) * 10.0f;
+            _cameraController.AbsoluteDistance =
+                MathF.Sqrt(dist.X * dist.X + dist.Y * dist.Y + dist.Z * dist.Z);
 
             // Источник света помещаем высоко над поверхностью
             var lightPos = target with { Z = maxZ * 10 };
@@ -143,7 +176,12 @@ namespace SurfaceLib
             _surfaceRenderer.SetSurfacePoints(points);
         }
 
-        // Каждый кадр передаём актуальную матрицу вида и обновляем подписи осей
+        /// <summary>
+        /// На каждом срабатывании таймера передаем позицию видовую матрицу от камеры
+        /// и отправляем запрос отрисовки
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnRenderTimerTick(object sender, EventArgs e)
         {
             if (!_surfaceRenderer.IsInitialized)
@@ -191,6 +229,10 @@ namespace SurfaceLib
             }
         }
 
+        /// <summary>
+        /// При удалении элемента с экрана останавливает рендер
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             _renderTimer.Stop();
@@ -198,7 +240,9 @@ namespace SurfaceLib
             base.OnDetachedFromVisualTree(e);
         }
 
-        // Удобный метод для сброса камеры к исходным параметрам
+        /// <summary>
+        /// Сброс камеры
+        /// </summary>
         public void ResetCamera()
         {
             _cameraController.Reset();

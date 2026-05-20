@@ -15,6 +15,9 @@ namespace SurfaceLib
         public const int GL_LINES = 0x0001;
     }
 
+    /// <summary>
+    /// Отрисовщик поверхностей
+    /// </summary>
     public class SurfaceRenderer : OpenGlCommonBase
     {
         // Входные данные поверхности
@@ -82,115 +85,88 @@ namespace SurfaceLib
         // Флаг для отслеживания необходимости пересоздания геометрии осей
         private bool _axesGeometryDirty = false;
 
+        // Длина осей координат
         private (float minX, float maxX, float minY, float maxY, float minZ, float maxZ) _AxisBounds;
         private (Vector3 world, Vector2 screen)[] _axisCaptions;
 
+        /// <summary>
+        /// Координаты концов осей в координатах мира и окна.
+        /// </summary>
         public (Vector3 world, Vector2 screen)[] AxisCaptions
         {
             get => _axisCaptions;
         }
 
+        /// <summary>
+        /// Был ли отрисовщих инициализован
+        /// </summary>
         public bool IsInitialized => _isInitialized;
+
+        /// <summary>
+        /// Цвет фона
+        /// </summary>
         public Vector3 ClearColor
         {
             get => _clearColor;
             set => _clearColor = value;
         }
 
+        /// <summary>
+        /// Позиция источника света
+        /// </summary>
         public Vector3 LightPosition
         {
             get => _lightPosition;
             set => _lightPosition = value;
         }
 
+        /// <summary>
+        /// Цвет источника света
+        /// </summary>
         public Vector3 LightColor
         {
             get => _lightColor;
             set => _lightColor = value;
         }
 
+        /// <summary>
+        /// Цвет поверхности
+        /// </summary>
         public Vector3 SurfaceColor
         {
             get => _surfaceColor;
             set => _surfaceColor = value;
         }
 
+        /// <summary>
+        /// Использовать ли настраиваимую матрицу вида
+        /// </summary>
         public bool UseCustomViewMatrix
         {
             get => _useCustomViewMatrix;
             set => _useCustomViewMatrix = value;
         }
 
+        /// <summary>
+        /// Настраиваемая матрица вида
+        /// </summary>
         public Matrix4x4 CustomViewMatrix
         {
             get => _customViewMatrix;
             set => _customViewMatrix = value;
         }
 
+        // Имя ресурсов шейдеров
         protected override string VertexShaderResource => "SurfaceClassLib.Shaders.SurfaceRenderer.vert";
         protected override string FragmentShaderResource => "SurfaceClassLib.Shaders.SurfaceRenderer.frag";
 
+        // У осей свой шейдер
         protected virtual string AxesVertexShaderResource => "SurfaceClassLib.Shaders.Axes.vert";
         protected virtual string AxesFragmentShaderResource => "SurfaceClassLib.Shaders.Axes.frag";
 
-        // Вспомогательные функции для расчета границ
-        private float GetLowerBound(float x)
-        {
-            if (float.IsNaN(x) || float.IsInfinity(x))
-                return 0;
-
-            if (Math.Abs(x) < 0.0001f)
-                return 0;
-
-            int order = (int)Math.Floor(Math.Log10(Math.Abs(x)));
-
-            // Пробуем порядки от текущего вниз
-            for (int currentOrder = order; currentOrder >= order - 10; currentOrder--)
-            {
-                foreach (float k in new float[] { 5, 2, 1 })
-                {
-                    float step = k * (float)Math.Pow(10, currentOrder);
-                    float bound = (float)Math.Floor(x / step) * step;
-                    if (bound <= x)
-                    {
-                        return bound;
-                    }
-                }
-            }
-
-            // Резервный вариант
-            return (float)Math.Floor(x);
-        }
-
-        private float GetUpperBound(float x)
-        {
-            if (float.IsNaN(x) || float.IsInfinity(x))
-                return 0;
-
-            if (Math.Abs(x) < 0.0001f)
-                return 0;
-
-            int order = (int)Math.Floor(Math.Log10(Math.Abs(x)));
-
-            // Пробуем порядки от текущего вниз
-            for (int currentOrder = order; currentOrder >= order - 10; currentOrder--)
-            {
-                foreach (float k in new float[] { 5, 2, 1 })
-                {
-                    float step = k * (float)Math.Pow(10, currentOrder);
-                    float bound = (float)Math.Ceiling(x / step) * step;
-                    if (bound >= x)
-                    {
-                        return bound;
-                    }
-                }
-            }
-
-            // Резервный вариант
-            return (float)Math.Ceiling(x);
-        }
-
-        // Рассчитываем границы осей
+        /// <summary>
+        /// Рассчитываем расположение осей
+        /// </summary>
         private void CalculateAxisBounds()
         {
             if (_surfacePoints == null || _surfacePoints.Count == 0)
@@ -226,6 +202,10 @@ namespace SurfaceLib
                              $"Z: [{axisMinZ:F6}, {axisMaxZ:F6}]");
         }
 
+        /// <summary>
+        /// Задаем точки поверхности
+        /// </summary>
+        /// <param name="points"></param>
         public void SetSurfacePoints(List<Vector3> points)
         {
             if (points == null || points.Count < 3)
@@ -248,6 +228,10 @@ namespace SurfaceLib
             }
         }
 
+        /// <summary>
+        /// Обновляем буфферы если точки поверхности изменены
+        /// </summary>
+        /// <param name="gl"></param>
         private void UpdateGeometryBuffers(GlInterface gl)
         {
             // Удаляем старые буферы и VAO
@@ -260,6 +244,13 @@ namespace SurfaceLib
             CreateGeometryBuffers(gl);
         }
 
+        /// <summary>
+        /// Генерация сетки треугольников.
+        /// Сначала используем триангуляцию Делоне в XY-плоскости,
+        /// затем заполняем буфферы вершин и индексов,
+        /// по ним будет построена поверхность.
+        /// Рассчитываем нормали для корректного определения цвета треугольника.
+        /// </summary>
         private void RegenerateMesh()
         {
             if (_surfacePoints.Count < 3)
@@ -298,6 +289,9 @@ namespace SurfaceLib
             ComputeNormals();
         }
 
+        /// <summary>
+        /// Расчет нормалей к треугольникам, образующим поверхность, после триангуляции
+        /// </summary>
         private void ComputeNormals()
         {
             _normals.Clear();
@@ -337,6 +331,11 @@ namespace SurfaceLib
             }
         }
 
+        /// <summary>
+        /// Триангуляция Делоне
+        /// </summary>
+        /// <param name="points">Точки для триангуляции</param>
+        /// <returns></returns>
         private List<(int, int, int)> DelaunayTriangulation(List<Vector2> points)
         {
             var triangles = new List<(int, int, int)>();
@@ -446,6 +445,16 @@ namespace SurfaceLib
             return triangles;
         }
 
+        /// <summary>
+        /// Достает точку из массива по индексу. Если точка находится за границей массива,
+        /// то возвращает точку супер-треугольника
+        /// </summary>
+        /// <param name="index">Номер точки</param>
+        /// <param name="points">Массив точек</param>
+        /// <param name="superA">Точка супер-треугольника</param>
+        /// <param name="superB">Точка супер-треугольника</param>
+        /// <param name="superC">Точка супер-треугольника</param>
+        /// <returns></returns>
         private Vector2 GetPoint(int index, List<Vector2> points, Vector2 superA, Vector2 superB, Vector2 superC)
         {
             if (index < points.Count)
@@ -457,6 +466,14 @@ namespace SurfaceLib
             return superC;
         }
 
+        /// <summary>
+        /// Находится ли точка внутри окружностии
+        /// </summary>
+        /// <param name="p">Точка для проверки</param>
+        /// <param name="a">Точки, образующие треугольник</param>
+        /// <param name="b">Точки, образующие треугольник</param>
+        /// <param name="c">Точки, образующие треугольник</param>
+        /// <returns></returns>
         private bool PointInCircumcircle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
         {
             // Вычисляем определитель для проверки принадлежности точки окружности
@@ -478,6 +495,11 @@ namespace SurfaceLib
             return det > 0;
         }
 
+        /// <summary>
+        /// Подготавливает OpenGl к получению данных для построения поверхности.
+        /// Формирует буфферы данных в контексте OpenGl.
+        /// </summary>
+        /// <param name="gl"></param>
         private void CreateGeometryBuffers(GlInterface gl)
         {
             // VAO
@@ -541,6 +563,10 @@ namespace SurfaceLib
             gl.BindVertexArray(0);
         }
 
+        /// <summary>
+        /// Подготавливает буфферы данных для построения осей координат
+        /// </summary>
+        /// <param name="gl"></param>
         private void CreateAxesGeometry(GlInterface gl)
         {
             if (_surfacePoints == null || _surfacePoints.Count == 0)
@@ -582,6 +608,11 @@ namespace SurfaceLib
             GlCheckError(gl, "CreateAxesGeometry");
         }
 
+        /// <summary>
+        /// Подготовка шейдеров для построения осей координат
+        /// </summary>
+        /// <param name="gl"></param>
+        /// <exception cref="Exception">Ошибка на уровне OpenGl</exception>
         private void ConfigureAxesShaders(GlInterface gl)
         {
             // Загружаем шейдеры из ресурсов
@@ -628,6 +659,10 @@ namespace SurfaceLib
             GlCheckError(gl, "ConfigureAxesShaders");
         }
 
+        /// <summary>
+        /// Пересоздает буфферы для отрисовки осей координат
+        /// </summary>
+        /// <param name="gl"></param>
         private void RecreateAxesGeometry(GlInterface gl)
         {
             // Очищаем старую геометрию осей
@@ -644,6 +679,10 @@ namespace SurfaceLib
             GlCheckError(gl, "RecreateAxesGeometry");
         }
 
+        /// <summary>
+        /// Инициализация OpenGl
+        /// </summary>
+        /// <param name="gl"></param>
         protected override void OnOpenGlInit(GlInterface gl)
         {
             base.OnOpenGlInit(gl);
@@ -682,6 +721,10 @@ namespace SurfaceLib
             }
         }
 
+        /// <summary>
+        /// Триангулируем точки поверхности, создаем буфферы отрисовки поверхности
+        /// </summary>
+        /// <param name="gl"></param>
         protected override void CreateGeometry(GlInterface gl)
         {
             if (_surfacePoints.Count > 0 && _vertices.Count == 0)
@@ -695,6 +738,10 @@ namespace SurfaceLib
             GlCheckError(gl, "CreateGeometry");
         }
 
+        /// <summary>
+        /// Рисует поверхность
+        /// </summary>
+        /// <param name="gl"></param>
         protected override void DrawGeometry(GlInterface gl)
         {
             if (_indices.Count == 0 || !_isInitialized)
@@ -708,6 +755,12 @@ namespace SurfaceLib
             GlCheckError(gl, "DrawGeometry");
         }
 
+        /// <summary>
+        /// Обновляет матрицы
+        /// </summary>
+        /// <param name="gl"></param>
+        /// <param name="width">Ширина проекции</param>
+        /// <param name="height">Высота проекции</param>
         protected override void UpdateUniforms(GlInterface gl, int width, int height)
         {
             _width = width;
@@ -755,6 +808,12 @@ namespace SurfaceLib
             gl.Uniform1f(_objectColorB, _surfaceColor.Z);
         }
 
+        /// <summary>
+        /// Отрисовка осей
+        /// </summary>
+        /// <param name="gl"></param>
+        /// <param name="width">Ширина проекции</param>
+        /// <param name="height">Высота проекции</param>
         private void DrawAxes(GlInterface gl, int width, int height)
         {
             if (_axesVao == 0 || _axesShaderProgram == 0)
@@ -778,6 +837,12 @@ namespace SurfaceLib
             GlCheckError(gl, "DrawAxes");
         }
 
+        /// <summary>
+        /// Обновляем матрицы для осей (те же что и для поверхности)
+        /// </summary>
+        /// <param name="gl"></param>
+        /// <param name="width">Ширина проекции</param>
+        /// <param name="height">Высота проекции</param>
         private void UpdateAxesUniforms(GlInterface gl, int width, int height)
         {
             // Матрицы для осей (используем те же, что и для поверхности)
@@ -807,6 +872,11 @@ namespace SurfaceLib
             _axisCaptions = AxesToScreen(width, height);
         }
 
+        /// <summary>
+        /// Доопределяем стандартный отрисовщик Avalonia
+        /// </summary>
+        /// <param name="gl"></param>
+        /// <param name="fb"></param>
         protected override void OnOpenGlRender(GlInterface gl, int fb)
         {
             int width = (int)Bounds.Width;
@@ -847,6 +917,10 @@ namespace SurfaceLib
             GlCheckError(gl, "OnOpenGlRender");
         }
 
+        /// <summary>
+        /// Очистка контекста OpenGl
+        /// </summary>
+        /// <param name="gl"></param>
         protected override void CleanupGeometry(GlInterface gl)
         {
             if (_vao != 0)
@@ -900,12 +974,22 @@ namespace SurfaceLib
             _isInitialized = false;
         }
 
+        /// <summary>
+        /// Деинициализация
+        /// </summary>
+        /// <param name="gl"></param>
         protected override void OnOpenGlDeinit(GlInterface gl)
         {
             base.OnOpenGlDeinit(gl);
             CleanupGeometry(gl);
         }
 
+        /// <summary>
+        /// Расчет положения осей
+        /// </summary>
+        /// <param name="width">Ширина проекции</param>
+        /// <param name="height">Высота проекции</param>
+        /// <returns></returns>
         private (Vector3 world, Vector2 screen)[] AxesToScreen(int width, int height)
         {
             // Применяем матрицы преобразования

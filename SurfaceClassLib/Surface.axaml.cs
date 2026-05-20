@@ -9,115 +9,211 @@ using Avalonia.Reactive;
 
 namespace SurfaceLib;
 
+/// <summary>
+/// Класс для отрисовки поверхностей с высокоуровневым API
+/// </summary>
 public partial class Surface : UserControl
 {
+    // Низкоуровневый бэкэнд
     private SurfaceView _surfaceView;
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<Color> SurfaceColorProperty =
         AvaloniaProperty.Register<Surface, Color>(nameof(SurfaceColor), Colors.AliceBlue);
+    /// <summary>
+    /// Цвет поверхности
+    /// </summary>
     public Color SurfaceColor
     {
         get => GetValue(SurfaceColorProperty);
         set => SetValue(SurfaceColorProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<Color> AxesColorProperty =
         AvaloniaProperty.Register<Surface, Color>(nameof(AxesColor), Colors.Gold);
+
+    /// <summary>
+    /// Цвет осей координат
+    /// </summary>
     public Color AxesColor
     {
         get => GetValue(AxesColorProperty);
         set => SetValue(AxesColorProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<bool> ShowAxesProperty =
     AvaloniaProperty.Register<Surface, bool>(nameof(ShowAxes), true);
+
+    /// <summary>
+    /// Показывать ли оси координат
+    /// </summary>
     public bool ShowAxes
     {
         get => GetValue(ShowAxesProperty);
         set => SetValue(ShowAxesProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<Color> ClearColorProperty =
         AvaloniaProperty.Register<Surface, Color>(nameof(ClearColor), Colors.Black);
+
+    /// <summary>
+    /// Цвет фона
+    /// </summary>
     public Color ClearColor
     {
         get => GetValue(ClearColorProperty);
         set => SetValue(ClearColorProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<Color> LightColorProperty =
     AvaloniaProperty.Register<Surface, Color>(nameof(LightColor), Colors.White);
+
+    /// <summary>
+    /// Цвет источника освещения
+    /// </summary>
     public Color LightColor
     {
         get => GetValue(LightColorProperty);
         set => SetValue(LightColorProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<double> LightPositionXProperty =
     AvaloniaProperty.Register<Surface, double>(nameof(LightPositionX), 0.0);
+
+    /// <summary>
+    /// Позиция света, координата X
+    /// </summary>
     public double LightPositionX
     {
         get => GetValue(LightPositionXProperty);
         set => SetValue(LightPositionXProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<double> LightPositionYProperty =
         AvaloniaProperty.Register<Surface, double>(nameof(LightPositionY), 0.0);
+
+    /// <summary>
+    /// Позиция света, координата Y
+    /// </summary>
     public double LightPositionY
     {
         get => GetValue(LightPositionYProperty);
         set => SetValue(LightPositionYProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<double> LightPositionZProperty =
-        AvaloniaProperty.Register<Surface, double>(nameof(LightPositionZ), 3.0);
+        AvaloniaProperty.Register<Surface, double>(nameof(LightPositionZ), 10.0);
+
+    /// <summary>
+    /// Позиция света, координата Z
+    /// </summary>
     public double LightPositionZ
     {
         get => GetValue(LightPositionZProperty);
         set => SetValue(LightPositionZProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<int> DigitsProperty =
         AvaloniaProperty.Register<Surface, int>(nameof(DigitsProperty), 2);
+
+    /// <summary>
+    /// Количество символов после запятой у подписей к осям координат
+    /// </summary>
     public int Digits
     {
         get => GetValue(DigitsProperty);
         set => SetValue(DigitsProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<float>YawProperty = 
         AvaloniaProperty.Register<Surface, float>(nameof(YawProperty ),0);
+
+    /// <summary>
+    /// Поворот вокруг центральной вертикальной оси (ось Z)
+    /// </summary>
     public float Yaw
     {
         get => GetValue(YawProperty);
         set => SetValue(YawProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<float>PitchProperty = 
         AvaloniaProperty.Register<Surface, float>(nameof(PitchProperty ),0);
+
+    /// <summary>
+    /// Наклон поверхности вокруг оси X
+    /// </summary>
     public float Pitch
     {
         get => GetValue(PitchProperty);
         set => SetValue(PitchProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<float> DistanceProperty =
-        AvaloniaProperty.Register<Surface, float>(nameof(DistanceProperty), 1);
+        AvaloniaProperty.Register<Surface, float>(nameof(DistanceProperty), 1.1f);
+
+    /// <summary>
+    /// Расстояние до центра сцены, на который смотрит камера
+    /// </summary>
     public float Distance
     {
         get => GetValue(DistanceProperty);
         set => SetValue(DistanceProperty, value);
     }
 
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
     public static readonly StyledProperty<List<Vector3>> PointsProperty =
         AvaloniaProperty.Register<Surface, List<Vector3>>(nameof(PointsProperty), new List<Vector3>());
+
+    /// <summary>
+    /// Точки поверхности
+    /// </summary>
     public List<Vector3> Points
     {
         get => GetValue(PointsProperty);
         set => SetValue(PointsProperty, value);
     }
 
-
+    /// <summary>
+    /// Конструктор
+    /// </summary>
     public Surface()
     {
         InitializeComponent();
@@ -139,6 +235,10 @@ public partial class Surface : UserControl
 
     }
 
+    /// <summary>
+    /// Региструет действие, которое нужно совершить при обновлении свойства,
+    /// передает данные к низкоуровнему обработчику
+    /// </summary>
     private void RegisterPropertyChangedCallbacks()
     {
         // Регистрируем обработчики изменений для всех свойств
@@ -157,44 +257,10 @@ public partial class Surface : UserControl
         this.GetObservable(PointsProperty).Subscribe(_ => _surfaceView.SetSurfacePoints(Points));
     }
 
+    /// <summary>
+    /// Преобразует Avalonia.Media.Color к OpenGl формату
+    /// </summary>
+    /// <param name="c">Цвет</param>
+    /// <returns>Цвет в OpenGl формате</returns>
     Vector3 ColorToVector3(Color c) => new Vector3(c.R / 255.0f, c.G / 255.0f, c.B / 255.0f);
 }
-
-//using Avalonia;
-//using Avalonia.Controls;
-//using Maga_Avalonia3D.Classes;
-//using System.Collections.Generic;
-//using System.Numerics;
-
-//namespace Maga_Avalonia3D;
-
-//public partial class Surface : UserControl
-//{
-//    private SceneRenderer _sceneRenderer;
-
-//    public Surface()
-//    {
-//        InitializeComponent();
-
-//        _sceneRenderer = new SceneRenderer();
-//        _sceneRenderer.Width = canvas.Width;
-//        _sceneRenderer.Height = canvas.Height;
-//        _sceneRenderer.ClearColor = new Vector3(0.1f, 0.1f, 0.1f);
-//        _sceneRenderer.LightPosition = new Vector3(3.0f, 3.0f, 3.0f);
-//        _sceneRenderer.LightColor = new Vector3(1.0f, 1.0f, 1.0f);
-
-//        var primitives = new List<PrimitiveInstance>
-//        {
-//            // Пол
-//            new() { Type = PrimitiveType.Plane, Position = new(0, -0.5f, 0), Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(0.3f, 0.3f, 0.3f) },
-
-//            // Объекты
-//            new() { Type = PrimitiveType.Cube,    Position = new(-2, 0, 0), Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(1, 0, 0) },
-//            new() { Type = PrimitiveType.Sphere,  Position = new(0, 0, 0),  Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(0, 1, 0) },
-//            new() { Type = PrimitiveType.Pyramid, Position = new(2, 0, 0),  Rotation = new(0, 0, 0), Scale = new(1, 1, 1), Color = new(0, 0, 1) }
-//        };
-
-//        _sceneRenderer.SetScene(primitives);
-//        canvas.Children.Add(_sceneRenderer);
-//    }
-//}
