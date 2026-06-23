@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Avalonia.Reactive;
+using System.Runtime.CompilerServices;
 
 namespace SurfaceLib;
 
@@ -44,6 +45,20 @@ public partial class Surface : UserControl
     {
         get => GetValue(AxesColorProperty);
         set => SetValue(AxesColorProperty, value);
+    }
+
+    /// <summary>
+    /// Регистрация свойства в Avalonia API и установка значения по умолчанию
+    /// </summary>
+    public static readonly StyledProperty<Color> AxesCaptionColorProperty =
+        AvaloniaProperty.Register<Surface, Color>(nameof(AxesCaptionColor), Colors.White);
+    /// <summary>
+    /// Цвет подписей к осям координат
+    /// </summary>
+    public Color AxesCaptionColor
+    {
+        get => GetValue(AxesCaptionColorProperty);
+        set => SetValue(AxesCaptionColorProperty, value);
     }
 
     /// <summary>
@@ -244,6 +259,7 @@ public partial class Surface : UserControl
         // Регистрируем обработчики изменений для всех свойств
         this.GetObservable(SurfaceColorProperty).Subscribe(_ => _surfaceView.SurfaceColor = ColorToVector3(SurfaceColor));
         this.GetObservable(AxesColorProperty).Subscribe(_ => _surfaceView.AxesColor = ColorToVector3(AxesColor));
+        this.GetObservable(AxesCaptionColorProperty).Subscribe(_ => _surfaceView.AxesCaptionColor = AxesCaptionColor);
         this.GetObservable(ShowAxesProperty).Subscribe(_ => _surfaceView.ShowAxes = ShowAxes);
         this.GetObservable(ClearColorProperty).Subscribe(_ => _surfaceView.ClearColor = ColorToVector3(ClearColor));
         this.GetObservable(LightColorProperty).Subscribe(_ => _surfaceView.LightColor = ColorToVector3(LightColor));

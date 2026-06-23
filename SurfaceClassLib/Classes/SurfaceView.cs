@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
@@ -63,6 +64,21 @@ namespace SurfaceLib
         {
             get => _surfaceRenderer.AxesColor;
             set => _surfaceRenderer.AxesColor = value;
+        }
+
+        /// <summary>
+        /// Цвет подписей осей координат
+        /// </summary>
+        public Avalonia.Media.Color AxesCaptionColor
+        {
+            set
+            {
+                var brush = new SolidColorBrush(value);
+                _0Caption.Foreground = brush;
+                _xCaption.Foreground = brush;
+                _yCaption.Foreground = brush;
+                _zCaption.Foreground = brush;
+            }
         }
 
         /// <summary>

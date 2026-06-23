@@ -35,7 +35,7 @@ public class MainViewModel : ViewModelBase, INotifyPropertyChanged
         set { _points = value; OnPropertyChanged(); }
     }
 
-    private float _yaw = 2.4f;
+    private float _yaw = 2.3f;
     public float Yaw
     {
         get => _yaw;
@@ -49,7 +49,7 @@ public class MainViewModel : ViewModelBase, INotifyPropertyChanged
         set { _pitch = value; OnPropertyChanged(); }
     }
 
-    private float _distance = 1.1f;
+    private float _distance = 1.4f;
     public float Distance
     {
         get => _distance;
